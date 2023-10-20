@@ -10,6 +10,14 @@
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 
+/Tetris3D/[Ll]ibrary/
+/Tetris3D/[Tt]emp/
+/Tetris3D/[Oo]bj/
+/Tetris3D/[Bb]uild/
+/Tetris3D/[Bb]uilds/
+/Tetris3D/[Ll]ogs/
+/Tetris3D/[Uu]ser[Ss]ettings/
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
