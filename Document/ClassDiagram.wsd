@@ -1,0 +1,86 @@
+@startuml
+
+class GameManager
+{
+    - Start()
+    - End()
+    - Pause
+    - Move()
+    - CheckCollision()
+}
+
+class UIManager
+{
+    + PrintScroe
+    + PrintSomething
+}
+
+class SoundManager
+{
+    + PlaySomeSound()
+}
+
+class Grid
+{
+    - Block<FreezBlock>
+
+    + Generatre()
+    + Draw()
+    + Clear()
+    + RemoveLine()
+}
+
+class Option
+{
+    - bgmVolume
+    - sfxVoulme
+}
+
+class TetriminoSpawner
+{
+    - currentTetrimino
+    - ketpTetrimino
+    - NextTetrimino
+}
+
+class Tetrimino
+{
+    - type
+    + Rotate()
+}
+
+class Block
+{
+    - Color
+    + Setting()
+}
+
+class Timer
+{
+    + ResetTimer()
+    + StartTimer()
+    + PauseTimer()
+}
+
+class Score
+{
+    + GetScore()
+    + SetScore()
+    + SaveLeadboard()
+    + LoadLeadboard()
+    + UpdateLeadBoard()
+}
+
+GameManager <-- Grid
+GameManager <-- Timer
+GameManager <-- TetriminoSpawner
+GameManager <-- Score
+GameManager <-- Option
+GameManager <-- UIManager
+GameManager <-- SoundManager
+TetriminoSpawner *-- Tetrimino:Object pooling?
+Tetrimino --|> Block
+
+
+
+@enduml
