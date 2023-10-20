@@ -4,16 +4,15 @@ using UnityEngine;
 
 public class Grid : MonoBehaviour
 {
-    private Transform root;
-    private readonly float offset = 0.02f;
+    private Transform container;
+    private readonly float offset = 0.03f;
     private readonly float cubeScale = 0.4f;
-    private readonly string rootName = "Root";
+    private readonly string rootName = "Grid";
     public void GenerateGrid()
     {
-        root = new GameObject(rootName).transform;
-        root.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        container = new GameObject(rootName).transform;
+        container.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
 
-        GameObject o = null;
         float positionX = 0;
         float positionY = 0;
 
@@ -24,15 +23,10 @@ public class Grid : MonoBehaviour
         {
             for (float y = 0; y < Constant.GridSize.y; y++)
             {
-                o = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                o.name = $"{x + 1} {y + 1} tile";
-                o.transform.SetParent(root);
-                o.transform.localScale = Vector3.one * cubeScale;
-
                 positionX = CalcuratePosition(x, cubeScale, xHalf, offset);
                 positionY = CalcuratePosition(y, cubeScale, yHalf, offset);
 
-                o.transform.position = new Vector3(positionX, positionY, 0);
+                Utils.CreateCubeBlock(positionX, positionY, cubeScale, $"{x + 1} {y + 1} tile", container);
             }
         }
     }
