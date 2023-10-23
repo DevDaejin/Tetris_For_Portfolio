@@ -23,7 +23,10 @@ public class TetriminoSpawner
         poolContainer.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
 
         tetriminoPool = new ObjectPool<Tetrimino>(Create, Get, Release, Destroy, defaultCapacity : initPoolSize);
+    }
 
+    public void Start()
+    {
         for (int i = 0; i < 4; i++)
         {
             tetriminoPool.Get();

@@ -34,7 +34,7 @@ public class Grid
 
                 Utils.CreateCubeBlock(positionX, positionY, Constant.cubeScale, $"{x + 1} {y + 1} tile", container);
 
-                if (x == (Constant.GridSize.x * 0.5f) && y == (Constant.GridSize.y - 1))
+                if (x == (Constant.GridSize.x * 0.5f) && y == (Constant.GridSize.y - 2))
                     spawnPoint = new Vector3(positionX, positionY);
             }
         }

@@ -463,9 +463,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fc4bbee548081343a0f0e36ad30c77e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  waitPoint1: {x: 0, y: 0, z: 0}
-  waitPoint2: {x: 0, y: 0, z: 0}
-  waitPoint3: {x: 0, y: 0, z: 0}
+  nextTetriminoGroup: {fileID: 377790460}
 --- !u!4 &633929994
 Transform:
   m_ObjectHideFlags: 0
