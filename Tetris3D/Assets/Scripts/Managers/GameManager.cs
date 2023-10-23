@@ -4,14 +4,21 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    [SerializeField] private Transform nextTetriminoGroup;
+
     private GameStatus status;
     private Grid grid;
+    private TetriminoSpawner spawner;
 
     void Start()
     {
         status = GameStatus.Title;
-        grid = gameObject.AddComponent<Grid>();
-        grid.GenerateGrid();
+        grid = new Grid();
+        spawner = new TetriminoSpawner(new Vector3[4] {
+            grid.GetSpawnPoint,
+            nextTetriminoGroup.GetChild(0).position,
+            nextTetriminoGroup.GetChild(1).position,
+            nextTetriminoGroup.GetChild(2).position}, 1);
     }
 
     void Update()
@@ -23,6 +30,9 @@ public class GameManager : MonoBehaviour
                 SetScene(GameStatus.Lobby);
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+            spawner.GetPool.Get();
     }
 
     void SetScene(GameStatus status)

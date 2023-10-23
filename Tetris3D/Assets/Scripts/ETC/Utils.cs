@@ -10,7 +10,7 @@ public class Utils
         o.name = name;
         o.transform.SetParent(parent);
         o.transform.localScale = Vector3.one * scaleRatio;
-        o.transform.position = new Vector3(x, y, 0);
+        o.transform.localPosition = new Vector3(x, y, 0);
         return o;
     }
 }
