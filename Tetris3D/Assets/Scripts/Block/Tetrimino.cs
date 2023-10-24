@@ -4,21 +4,19 @@ using UnityEngine;
 
 public class Tetrimino : Block
 {
-    [SerializeField] private TetriminoType type;
-    private GameObject[,] GameObjectsArray;
-    private bool isInit = false;
+    [SerializeField] private TetriminoType teriminoType;
+    private bool isInitialized = false;
+    private GameObject[,] GameObjectsArray = new GameObject[,] {{null, null, null, null},
+                                                                {null, null, null, null},
+                                                                {null, null, null, null},
+                                                                {null, null, null, null}};
 
     public void InitTetrimino(TetriminoType type)
     {
-        this.type = type;
-        material = new Material(Shader.Find(shaderPath));
+        teriminoType = type;
+        material = new Material(Shader.Find(Constant.LitShaderPath));
 
-        GameObjectsArray = new GameObject[,] {{null, null, null, null},
-                                              {null, null, null, null},
-                                              {null, null, null, null},
-                                              {null, null, null, null}};
-
-        switch (type)
+        switch (teriminoType)
         {
             case TetriminoType.I:
                 SetTetrimino(Color.cyan, new int[4, 4]
@@ -39,7 +37,7 @@ public class Tetrimino : Block
                     });
                 break;
             case TetriminoType.T:
-                SetTetrimino(purple, new int[4, 4]
+                SetTetrimino(Constant.Purple, new int[4, 4]
                     {
                         {0,0,0,0},
                         {1,1,1,0},
@@ -66,7 +64,7 @@ public class Tetrimino : Block
                     });
                 break;
             case TetriminoType.L:
-                SetTetrimino(orange, new int[4, 4]
+                SetTetrimino(Constant.Orange, new int[4, 4]
                     {
                         {0,0,0,0},
                         {1,1,1,0},
@@ -91,18 +89,18 @@ public class Tetrimino : Block
         this.color = color;
         this.array = array;
 
-        float centerX = array.GetLength(0) * (Constant.cubeScale + Constant.cubeInterval) * -0.5f;
-        float centerY = array.GetLength(1) * (Constant.cubeScale + Constant.cubeInterval) * -0.5f;
+        float centerX = array.GetLength(0) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
+        float centerY = array.GetLength(1) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
 
         for (int row = 0; row < array.GetLength(0); row++)
         {
             for (int col = 0; col < array.GetLength(1); col++)
             {
-                if (!isInit)
+                if (!isInitialized)
                 {
-                    var o = Utils.CreateCubeBlock(centerX + (row * (Constant.cubeScale + Constant.cubeInterval)),
-                                                  -(centerY + (col * (Constant.cubeScale + Constant.cubeInterval))),
-                                                  Constant.cubeScale, parent: transform);
+                    var o = Utils.CreateCubeBlock(centerX + (row * (Constant.CubeScale + Constant.CubeInterval)),
+                                                  -(centerY + (col * (Constant.CubeScale + Constant.CubeInterval))),
+                                                  Constant.CubeScale, parent: transform);
 
                     o.name = $"{col + 1} / {row + 1}";
                     o.gameObject.SetActive(false);
@@ -122,7 +120,7 @@ public class Tetrimino : Block
             }
         }
 
-        if (!isInit)
-            isInit = true;
+        if (!isInitialized)
+            isInitialized = true;
     }
 }

@@ -15,6 +15,7 @@ public class TetriminoSpawner
     private readonly string poolName = "TetriminoPool";
     private readonly string tetriminoName = "Tetrimino";
 
+    private int test = 0;
     public TetriminoSpawner(Vector3[] spawnPoint,int initPoolSize)
     {
         Array.Copy(spawnPoint, tetriminoPositions, spawnPoint.Length);
@@ -27,20 +28,23 @@ public class TetriminoSpawner
 
     public void Start()
     {
+        ReleaseAll();
+
         for (int i = 0; i < 4; i++)
         {
             tetriminoPool.Get();
             var child = poolContainer.transform.GetChild(i);
             child.position = tetriminoPositions[i];
-            queueTetrimino.Enqueue(child.gameObject);
         }
 
         currentTetrimino = queueTetrimino.Dequeue();
     }
 
+    public void ShowBlocks(bool isShow) => poolContainer.SetActive(isShow);
+
     private Tetrimino Create()
     {
-        Tetrimino t = new GameObject(tetriminoName).AddComponent<Tetrimino>();
+        Tetrimino t = new GameObject(tetriminoName + (test++).ToString()).AddComponent<Tetrimino>();
         t.transform.SetParent(poolContainer.transform);
         t.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
 
@@ -61,7 +65,6 @@ public class TetriminoSpawner
     private void Release(Tetrimino tetrimino)
     {
         tetrimino.gameObject.SetActive(false);
-        Update();
     }
 
     private void Destroy(Tetrimino tetrimino)
@@ -86,11 +89,22 @@ public class TetriminoSpawner
         currentTetrimino.transform.position = tetriminoPositions[0];
 
         tetriminoPool.Get();
-        
-        for (int i = 1; i < tetriminoPositions.Length; i++)
+
+        GameObject o;
+        for (int i = 1; i < queueTetrimino.Count; i++)
         {
-            Debug.Log($"{queueTetrimino.ToArray().Length} {tetriminoPositions.Length}");
-            queueTetrimino.ToArray()[i].transform.position = tetriminoPositions[i];
+            o = queueTetrimino.ToArray()[i];
+            o.transform.position = tetriminoPositions[i];
+        }
+    }
+
+    public void ReleaseAll()
+    {
+        int count = queueTetrimino.Count;
+        for (int i = 0; i < count; i++)
+        {
+            var o = queueTetrimino.Dequeue();
+            tetriminoPool.Release(o.GetComponent<Tetrimino>());
         }
     }
 }

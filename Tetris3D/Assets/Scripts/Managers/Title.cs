@@ -5,40 +5,107 @@ using UnityEngine;
 public class Title : Block
 {
     private float charInterval = 2;
-    private readonly string[] tetris = { "T", "E", "T", "R", "I", "S" };
+    private float heightOffset = 1.5f;
+    private float textOffset = 1.5f;
+    private float animationSpeed = 2;
+    private string[] tetris = { "T", "E", "T", "R", "I", "S" };
     private new int[][,] array;
+    private Color[] blockColors;
+    private Transform blockContainer;
+    private TMPro.TextMeshPro tmp;
+
+    private Coroutine titleAnimationCoroutine;
+
+    private readonly string blockContainerName = "Blocks";
+    private readonly string pressAnyKey = "Press any key";
+    private readonly string textShaderPath = "TextMeshPro/Mobile/Distance Field";
+
+    #region Unity leftcycle
+    private void OnEnable()
+    {
+        titleAnimationCoroutine = StartCoroutine(TitleAnimationCoroutine());
+    }
 
     private void Start()
     {
-        SetData();
-        GameObject character;
-        material = new Material(Shader.Find(shaderPath));
+        blockColors = new Color[] { Color.red, Color.green, Color.blue, Color.yellow, Color.cyan, Constant.Orange, Constant.Purple };
 
-        Vector3 startPosition = Vector3.left * ((tetris.Length - charInterval) * 0.5f);
+        SetData();
+        CreateBlock();
+        CreateText();
+    }
+
+    private void OnDisable()
+    {
+        StopCoroutine(titleAnimationCoroutine);
+        titleAnimationCoroutine = null;
+    }
+    #endregion
+
+    IEnumerator TitleAnimationCoroutine()
+    {
+        yield return new WaitUntil(() => tmp != null);
+
+        tmp.color = Color.white;
+        float time = 0;
+        while (true)
+        {
+            tmp.color = new Color(1, 1, 1, (Mathf.Cos(time * animationSpeed) + 1));
+            time += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private void CreateBlock()
+    {
+        blockContainer = new GameObject(blockContainerName).transform;
+        blockContainer.SetParent(transform);
+        blockContainer.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+
+        GameObject titleCharacterBlock;
+        Vector3 startPosition = Vector3.left * ((tetris.Length) * 0.5f + charInterval);
         for (int i = 0; i < tetris.Length; i++)
         {
-            character = new GameObject(tetris[i]);
-            character.transform.position = startPosition + (Vector3.right * i * charInterval);
-            character.transform.SetParent(transform);
+            titleCharacterBlock = new GameObject(tetris[i]);
+            titleCharacterBlock.transform.position = startPosition + (Vector3.right * i * charInterval);
+            titleCharacterBlock.transform.SetParent(blockContainer);
 
-            float centerX = array[i].GetLength(0) * (Constant.cubeScale + Constant.cubeInterval) * -0.5f;
-            float centerY = array[i].GetLength(1) * (Constant.cubeScale + Constant.cubeInterval) * -0.5f;
+            float centerX = array[i].GetLength(1) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
+            float centerY = array[i].GetLength(0) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
 
             for (int row = 0; row < array[i].GetLength(0); row++)
             {
                 for (int col = 0; col < array[i].GetLength(1); col++)
                 {
-                    if (array[i][row,col] == 1)
+                    if (array[i][row, col] == 1)
                     {
-                        var o = Utils.CreateCubeBlock(centerX + (col * (Constant.cubeScale + Constant.cubeInterval)),
-                                                      -(centerY + (row * (Constant.cubeScale + Constant.cubeInterval))),
-                                                      Constant.cubeScale, parent: character.transform);
+                        var o = Utils.CreateCubeBlock(centerX + (col * (Constant.CubeScale + Constant.CubeInterval) + (Constant.CubeScale * 0.5f)),
+                                                      -(centerY + (row * (Constant.CubeScale + Constant.CubeInterval))),
+                                                      Constant.CubeScale, parent: titleCharacterBlock.transform);
 
-                        o.GetComponent<MeshRenderer>().material = material;
+                        var m = o.GetComponent<MeshRenderer>();
+                        m.material = new Material(Shader.Find(Constant.LitShaderPath));
+                        m.material.color = blockColors[Random.Range(0, blockColors.Length)];
                     }
                 }
             }
         }
+
+        transform.position += Vector3.up * heightOffset;
+    }
+
+    private void CreateText()
+    {
+        GameObject text = new GameObject();
+        text.transform.SetParent(transform);
+        text.transform.position += Vector3.down * textOffset;
+
+        text.AddComponent<MeshRenderer>().material = new Material(Shader.Find(textShaderPath));
+        tmp = text.AddComponent<TMPro.TextMeshPro>();
+        tmp.text = pressAnyKey;
+        tmp.alignment = TMPro.TextAlignmentOptions.Center;
+        tmp.fontSize = 7f;
+        tmp.color = Color.white;
     }
 
     private void SetData()

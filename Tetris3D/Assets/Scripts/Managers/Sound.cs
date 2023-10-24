@@ -4,15 +4,69 @@ using UnityEngine;
 
 public class Sound : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    //Title, Game, Result
+    [SerializeField] private AudioClip[] bgmClip;
+
+    //Move, Rotate, SoftDrop, HardDrop, Hold, Line1, Line2, Line3, Line4
+    [SerializeField] private AudioClip[] sfxClip;
+    
+    private AudioSource bgmSource;
+    private AudioSource sfxSource;
+    private float bgmVolume = 1;
+
+    private float sfxVolume = 1;
+
+    private readonly string bgmName = "BGM";
+    private readonly string sfxName = "SFX";
+
+    private void Start()
     {
-        
+        bgmSource = CreateAudioSource(bgmName);
+        bgmSource.playOnAwake = false;
+
+        sfxSource = CreateAudioSource(sfxName);
+        sfxSource.playOnAwake = false;
+        sfxSource.loop = false;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void PlaySFX(SFX sfx, float pitch)
     {
-        
+        sfxSource.pitch = pitch;
+        sfxSource.PlayOneShot(sfxClip[(int)sfx], sfxVolume);
+    }
+
+    public void PlaySFX(SFX sfx, float volume, float pitch)
+    {
+        sfxVolume = volume;
+        PlaySFX(sfx, pitch);
+    }
+
+    public void PlayBGM(BGM bgm, float pitch = 1, bool isLoop = false)
+    {
+        if (bgmSource.isPlaying)
+            bgmSource.Stop();
+
+        bgmSource.volume = bgmVolume;
+        bgmSource.pitch = pitch;
+        bgmSource.clip = bgmClip[(int)bgm];
+        bgmSource.loop = isLoop;
+        bgmSource.Play();
+    }
+
+    public void PlayBGM(BGM bgm, float volume, float pitch, bool isLoop)
+    {
+        bgmVolume = volume;
+        PlayBGM(bgm, volume, pitch, isLoop);
+    }
+
+    public void StopBGM() => bgmSource.Stop();
+
+    public void SetBGMPitch(float pitch) => bgmSource.pitch = pitch;
+
+    private AudioSource CreateAudioSource(string name)
+    {
+        GameObject o = new GameObject(name);
+        o.transform.SetParent(transform);
+        return o.AddComponent<AudioSource>();
     }
 }
