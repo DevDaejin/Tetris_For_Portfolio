@@ -2730,7 +2730,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "<B><size=4>Key Info</b></size>\n\n\u2190|\u2192 : Move block\n \u2191 
     : Rotate block(clockwise)\n \u2193  : Soft drop\n\nShift : Hold block\nSpace
-    bar : Hard drop\n\nF1 : To title\nF2 : Restart\nF3 : Pause & Option"
+    bar : Hard drop\n\nF1 : To title\nF2 : Restart\nF3 : Pause & Option\nF4 : Change
+    camera projection"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f695f57cd94ee2942ae00d828d7a8b25, type: 2}
   m_sharedMaterial: {fileID: 8726719165270459834, guid: f695f57cd94ee2942ae00d828d7a8b25,

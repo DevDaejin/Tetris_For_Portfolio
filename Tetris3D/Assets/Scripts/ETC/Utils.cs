@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class Utils
 {
-    public static GameObject CreateCubeBlock(float x, float y, float scaleRatio, string name = "Block", Transform parent = null)
+    public static GameObject CreateCubeBlock(Vector3 localPosition, float scaleRatio, string name = "Block", Transform parent = null)
     {
         var o = GameObject.CreatePrimitive(PrimitiveType.Cube);
         o.name = name;
         o.transform.SetParent(parent);
         o.transform.localScale = Vector3.one * scaleRatio;
-        o.transform.localPosition = new Vector3(x, y, 0);
+        o.transform.localPosition = localPosition;
         return o;
     }
 }

@@ -9,7 +9,7 @@ public class Title : Block
     private float textOffset = 1.5f;
     private float animationSpeed = 2;
     private string[] tetris = { "T", "E", "T", "R", "I", "S" };
-    private new int[][,] array;
+    private bool[][,] blockArray;
     private Color[] blockColors;
     private Transform blockContainer;
     private TMPro.TextMeshPro tmp;
@@ -33,6 +33,26 @@ public class Title : Block
         SetData();
         CreateBlock();
         CreateText();
+
+        //TODO : ªË¡¶
+        //var b = new int[3, 4]
+        //{
+        //    {01,02,03,04},
+        //    {05,06,07,08},
+        //    {09,10,11,12},
+        //};
+
+        //string s = string.Empty;
+
+        //for (int row = 0; row < b.GetLength(0); row++)
+        //{
+        //    s += "\n";
+        //    for (int col = 0; col < b.GetLength(1); col++)
+        //    {
+        //        s += $" {b[row, col]} ";
+        //    }
+        //}
+        //Debug.Log(s);
     }
 
     private void OnDisable()
@@ -70,18 +90,19 @@ public class Title : Block
             titleCharacterBlock.transform.position = startPosition + (Vector3.right * i * charInterval);
             titleCharacterBlock.transform.SetParent(blockContainer);
 
-            float centerX = array[i].GetLength(1) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
-            float centerY = array[i].GetLength(0) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
+            float centerX = blockArray[i].GetLength(1) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
+            float centerY = blockArray[i].GetLength(0) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
 
-            for (int row = 0; row < array[i].GetLength(0); row++)
+            for (int dim1 = 0; dim1 < blockArray[i].GetLength(0); dim1++)
             {
-                for (int col = 0; col < array[i].GetLength(1); col++)
+                for (int dim2 = 0; dim2 < blockArray[i].GetLength(1); dim2++)
                 {
-                    if (array[i][row, col] == 1)
+                    if (blockArray[i][dim1, dim2])
                     {
-                        var o = Utils.CreateCubeBlock(centerX + (col * (Constant.CubeScale + Constant.CubeInterval) + (Constant.CubeScale * 0.5f)),
-                                                      -(centerY + (row * (Constant.CubeScale + Constant.CubeInterval))),
-                                                      Constant.CubeScale, parent: titleCharacterBlock.transform);
+                        Vector3 pos = new Vector3(
+                            centerX + (dim2 * (Constant.CubeScale + Constant.CubeInterval) + (Constant.CubeScale * 0.5f)),
+                            -(centerY + (dim1 * (Constant.CubeScale + Constant.CubeInterval))), 0);
+                        var o = Utils.CreateCubeBlock(pos, Constant.CubeScale, parent: titleCharacterBlock.transform);
 
                         var m = o.GetComponent<MeshRenderer>();
                         m.material = new Material(Shader.Find(Constant.LitShaderPath));
@@ -110,60 +131,60 @@ public class Title : Block
 
     private void SetData()
     {
-        array = new int[6][,];
+        blockArray = new bool[6][,];
         //T
-        array[0] = new int[,]
+        blockArray[0] = new bool[,]
         {
-            {1,1,1},
-            {0,1,0},
-            {0,1,0},
-            {0,1,0},
-            {0,1,0}
+            {true,  true,   true},
+            {false, true,   false},
+            {false, true,   false},
+            {false, true,   false},
+            {false, true,   false}
         };
         //E
-        array[1] = new int[,]
+        blockArray[1] = new bool[,]
         {
-            {1,1,1},
-            {1,0,0},
-            {1,1,1},
-            {1,0,0},
-            {1,1,1},
+            {true,  true,   true},
+            {true,  false,  false},
+            {true,  true,   true},
+            {true,  false,  false},
+            {true,  true,   true},
         };
         //T
-        array[2] = new int[,]
+        blockArray[2] = new bool[,]
          {
-            {1,1,1},
-            {0,1,0},
-            {0,1,0},
-            {0,1,0},
-            {0,1,0}
+            {true,  true,   true},
+            {false, true,   false},
+            {false, true,   false},
+            {false, true,   false},
+            {false, true,   false}
          };
         //R
-        array[3] = new int[,]
+        blockArray[3] = new bool[,]
          {
-            {1,1,1},
-            {1,0,1},
-            {1,1,0},
-            {1,0,1},
-            {1,0,1}
+            {true,  true,   true},
+            {true,  false,  true},
+            {true,  true,   false},
+            {true,  false,  true},
+            {true,  false,  true}
          };
         //I
-        array[4] = new int[,]
+        blockArray[4] = new bool[,]
          {
-            {1,1,1},
-            {0,1,0},
-            {0,1,0},
-            {0,1,0},
-            {1,1,1}
+            {true,  true,   true},
+            {false, true,   false},
+            {false, true,   false},
+            {false, true,   false},
+            {true,  true,   true}
          };
         //S
-        array[5] = new int[,]
+        blockArray[5] = new bool[,]
          {
-            {1,1,1},
-            {1,0,0},
-            {1,1,1},
-            {0,0,1},
-            {1,1,1}
+            {true,  true,   true},
+            {true,  false,  false},
+            {true,  true,   true},
+            {false, false,  true},
+            {true,  true,   true}
          };
     }
 }

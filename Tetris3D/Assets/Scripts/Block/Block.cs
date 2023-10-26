@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class Block : MonoBehaviour
 {
-    public int[,] GetArray { get => array; }
-
-    protected int[,] array;
+    public bool[,] GetArray { get => array; }
+    protected bool[,] array;
     protected Color color = Color.white;
-    protected Material material;    
+    protected Material material;
     protected readonly string colorPropertyName = "_BaseColor";
 }

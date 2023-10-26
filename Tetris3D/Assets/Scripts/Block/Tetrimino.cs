@@ -1,126 +1,148 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Tetrimino : Block
 {
-    [SerializeField] private TetriminoType teriminoType;
+    public TetriminoType GetTetriminoType { get => tetriminoType; }
+    [SerializeField] private TetriminoType tetriminoType;
+    public Vector2Int PositionInGrid { get; set; }
+
+    private int rotate = 0;
+    private int rotateLength = 0;
     private bool isInitialized = false;
+    private bool isInit = false;
     private GameObject[,] GameObjectsArray = new GameObject[,] {{null, null, null, null},
                                                                 {null, null, null, null},
                                                                 {null, null, null, null},
                                                                 {null, null, null, null}};
 
-    public void InitTetrimino(TetriminoType type)
+    public void SetTetrimino()
     {
-        teriminoType = type;
-        material = new Material(Shader.Find(Constant.LitShaderPath));
+        if (!isInit)
+        {
+            material = new Material(Shader.Find(Constant.LitShaderPath));
+            isInit = true;
+        }
 
-        switch (teriminoType)
+        var seed = Enum.GetValues(typeof(TetriminoType));
+        tetriminoType = (TetriminoType)seed.GetValue(UnityEngine.Random.Range(0, seed.Length));
+
+        switch (tetriminoType)
         {
             case TetriminoType.I:
-                SetTetrimino(Color.cyan, new int[4, 4]
-                    {
-                        {0,0,0,0},
-                        {1,1,1,1},
-                        {0,0,0,0},
-                        {0,0,0,0}
-                    });
+                {
+                    UpdateBlock(Color.cyan, TetriminoData.IArray[0]);
+                }
                 break;
             case TetriminoType.O:
-                SetTetrimino(Color.yellow, new int[4, 4]
-                    {
-                        {0,0,0,0},
-                        {0,1,1,0},
-                        {0,1,1,0},
-                        {0,0,0,0}
-                    });
+                {
+                    UpdateBlock(Color.yellow, TetriminoData.OArray[0]);
+                }
                 break;
             case TetriminoType.T:
-                SetTetrimino(Constant.Purple, new int[4, 4]
-                    {
-                        {0,0,0,0},
-                        {1,1,1,0},
-                        {0,1,0,0},
-                        {0,0,0,0}
-                    });
+                {
+                    UpdateBlock(Constant.Purple, TetriminoData.TArray[0]);
+                }
                 break;
             case TetriminoType.S:
-                SetTetrimino(Color.green, new int[4, 4]
-                    {
-                        {0,0,0,0},
-                        {0,1,1,0},
-                        {1,1,0,0},
-                        {0,0,0,0}
-                    });
+                {
+                    UpdateBlock(Color.green, TetriminoData.SArray[0]);
+                }
                 break;
             case TetriminoType.Z:
-                SetTetrimino(Color.red, new int[4, 4]
-                    {
-                        {0,0,0,0},
-                        {1,1,0,0},
-                        {0,1,1,0},
-                        {0,0,0,0}
-                    });
+                {
+                    UpdateBlock(Color.red, TetriminoData.ZArray[0]);
+                }
                 break;
             case TetriminoType.L:
-                SetTetrimino(Constant.Orange, new int[4, 4]
-                    {
-                        {0,0,0,0},
-                        {1,1,1,0},
-                        {1,0,0,0},
-                        {0,0,0,0}
-                    });
+                {
+                    UpdateBlock(Constant.Orange, TetriminoData.LArray[0]);
+                }
                 break;
             case TetriminoType.J:
-                SetTetrimino(Color.blue, new int[4, 4]
-                    {
-                        {0,0,0,0},
-                        {1,0,0,0},
-                        {1,1,1,0},
-                        {0,0,0,0}
-                    });
+                {
+                    UpdateBlock(Color.blue, TetriminoData.JArray[0]);
+                }
                 break;
         }
+
+        PositionInGrid = new Vector2Int(Constant.SpawnRow, -GetHeight());
     }
 
-    private void SetTetrimino(Color color, int[,] array)
+    private void RotateBlock()
+    {
+
+    }
+
+    private void UpdateBlock(Color color, bool[,] array)
     {
         this.color = color;
         this.array = array;
 
-        float centerX = array.GetLength(0) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
-        float centerY = array.GetLength(1) * (Constant.CubeScale + Constant.CubeInterval) * -0.5f;
-
-        for (int row = 0; row < array.GetLength(0); row++)
+        for (int dim1 = 0; dim1 < GetArray.GetLength(0); dim1++)
         {
-            for (int col = 0; col < array.GetLength(1); col++)
+            for (int dim2 = 0; dim2 < GetArray.GetLength(1); dim2++)
             {
                 if (!isInitialized)
                 {
-                    var o = Utils.CreateCubeBlock(centerX + (row * (Constant.CubeScale + Constant.CubeInterval)),
-                                                  -(centerY + (col * (Constant.CubeScale + Constant.CubeInterval))),
-                                                  Constant.CubeScale, parent: transform);
+                    rotateLength = array.GetLength(0);
+                    Debug.Log(rotateLength);
+                    Vector3 pos = new Vector3(
+                        (dim2 * (Constant.CubeScale + Constant.CubeInterval)),
+                        (-dim1 * (Constant.CubeScale + Constant.CubeInterval)), 0);
 
-                    o.name = $"{col + 1} / {row + 1}";
+                    var o = Utils.CreateCubeBlock(pos, Constant.CubeScale, parent: transform);
+
+                    o.name = $"{dim1 + 1} / {dim2 + 1}";
                     o.gameObject.SetActive(false);
-                    GameObjectsArray[col, row] = o;
+                    GameObjectsArray[dim1, dim2] = o;
                 }
 
-                if (array[col, row] == 1)
+                if (GetArray[dim1, dim2])
                 {
                     material.SetColor(colorPropertyName, color);
-                    GameObjectsArray[col, row].GetComponent<MeshRenderer>().material = material;
-                    GameObjectsArray[col, row].SetActive(true);
+                    GameObjectsArray[dim1, dim2].GetComponent<MeshRenderer>().material = material;
+                    GameObjectsArray[dim1, dim2].SetActive(true);
                 }
                 else
                 {
-                    GameObjectsArray[col, row].SetActive(false);
+                    GameObjectsArray[dim1, dim2].SetActive(false);
                 }
+
             }
         }
 
         if (!isInitialized)
             isInitialized = true;
+    }
+
+    public int GetHeight()
+    {
+        int height = 0;
+        for (int row = 0; row < array.GetLength(0); row++)
+        {
+            for (int col = 0; col < array.GetLength(1); col++)
+            {
+                if (array[row, col] && height < row)
+                    height = row;
+            }
+        }
+        return height;
+    }
+
+    public int GetWidth()
+    {
+        int width = 0;
+        for (int row = 0; row < array.GetLength(0); row++)
+        {
+            for (int col = 0; col < array.GetLength(1); col++)
+            {
+                if (array[row, col] && width < col)
+                    width = col;
+            }
+        }
+        return width;
     }
 }

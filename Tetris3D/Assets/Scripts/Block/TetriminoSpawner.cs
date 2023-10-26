@@ -11,6 +11,11 @@ public class TetriminoSpawner
     private GameObject currentTetrimino;
     private Queue<GameObject> queueTetrimino = new Queue<GameObject>();
     private Vector3[] tetriminoPositions = new Vector3[4];
+    private Vector3 blockIOffset;//block I
+    private Vector3 blockOOffset;//block O
+    private Vector3 blockOtherOffset;//other block
+
+    public Tetrimino GetCurrentTetrimino { get => currentTetrimino.GetComponent<Tetrimino>(); }
 
     private readonly string poolName = "TetriminoPool";
     private readonly string tetriminoName = "Tetrimino";
@@ -24,17 +29,27 @@ public class TetriminoSpawner
         poolContainer.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
 
         tetriminoPool = new ObjectPool<Tetrimino>(Create, Get, Release, Destroy, defaultCapacity : initPoolSize);
+
+        blockIOffset = new Vector3(Constant.CubeScale * 0.5f, -Constant.CubeScale, 0);
+        blockOOffset = new Vector3(Constant.CubeScale * 0.5f, -Constant.CubeScale * 0.5f, 0);
+        blockOtherOffset = new Vector3(Constant.CubeScale, -Constant.CubeScale * 0.5f, 0);
+
+        ShowBlocks(false);
     }
 
     public void Start()
     {
         ReleaseAll();
-
+        Vector3 offset = Vector3.zero;
         for (int i = 0; i < 4; i++)
         {
             tetriminoPool.Get();
             var child = poolContainer.transform.GetChild(i);
-            child.position = tetriminoPositions[i];
+
+            if (i != 0)
+                offset = Offset(child.GetComponent<Tetrimino>());
+
+            child.position = tetriminoPositions[i] + offset;
         }
 
         currentTetrimino = queueTetrimino.Dequeue();
@@ -54,11 +69,7 @@ public class TetriminoSpawner
     private void Get(Tetrimino tetrimino)
     {
         tetrimino.gameObject.SetActive(true);
-
-        var seed = Enum.GetValues(typeof(TetriminoType));
-        TetriminoType type = (TetriminoType)seed.GetValue(UnityEngine.Random.Range(0, seed.Length));
-
-        tetrimino.InitTetrimino(type);
+        tetrimino.SetTetrimino();
         queueTetrimino.Enqueue(tetrimino.gameObject);
     }
 
@@ -90,11 +101,11 @@ public class TetriminoSpawner
 
         tetriminoPool.Get();
 
-        GameObject o;
+        Tetrimino t;
         for (int i = 1; i < queueTetrimino.Count; i++)
         {
-            o = queueTetrimino.ToArray()[i];
-            o.transform.position = tetriminoPositions[i];
+            t = queueTetrimino.ToArray()[i].GetComponent<Tetrimino>();
+            t.transform.position = tetriminoPositions[i] + Offset(t.GetComponent<Tetrimino>());
         }
     }
 
@@ -106,5 +117,15 @@ public class TetriminoSpawner
             var o = queueTetrimino.Dequeue();
             tetriminoPool.Release(o.GetComponent<Tetrimino>());
         }
+    }
+
+    private Vector3 Offset(Tetrimino tetrimino)
+    {
+        if (tetrimino.GetTetriminoType == TetriminoType.I)
+            return blockIOffset;//block I
+        else if (tetrimino.GetTetriminoType == TetriminoType.O)
+            return blockOOffset;//block O
+        else
+            return blockOtherOffset;//other block
     }
 }

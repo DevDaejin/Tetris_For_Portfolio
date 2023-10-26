@@ -12,38 +12,91 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Transform nextTetriminoGroup;
 
+    private Vector2Int moveAmount = new Vector2Int(0, 0);
     private GameStatus currentStatus;
     private Grid grid;
     private TetriminoSpawner spawner;
     private Sound sound;
-
+    private int level;
+    private float updateInterval = 1f;
+    private float accelation = 1;
+    private float time = 0;
+    private float orthoSize = 5.8f;
     private bool isStop;
+    private const int tetriminoArraySize = 4;
 
     private UnityEvent<GameStatus> onChangeGameState = new UnityEvent<GameStatus>();
-
     void Start()
     {
         currentStatus = GameStatus.Title;
 
         sound = GetComponent<Sound>();
-        grid = new Grid();
-        
-        spawner = new TetriminoSpawner(new Vector3[4] {
+        grid = new Grid(Constant.GridSize.x, Constant.GridSize.y, Constant.CubeScale, Constant.CubeInterval);
+
+        spawner = new TetriminoSpawner(new Vector3[tetriminoArraySize] {
             grid.GetSpawnPoint,
             nextTetriminoGroup.GetChild(0).position,
             nextTetriminoGroup.GetChild(1).position,
             nextTetriminoGroup.GetChild(2).position}, 1);
-        spawner.ShowBlocks(false);
 
         isStop = true;
 
         onChangeGameState.AddListener(UpdateStatus);
         onChangeGameState.Invoke(GameStatus.Title);
+
+        Init();
     }
 
-    void Update()
+    private void Init()
+    {
+        level = 0;
+        time = 0;
+    }
+
+    private void Update()
     {
         KeyInput();
+
+        if (!isStop)
+        {
+            if (time < (updateInterval - (level * 0.1f)))
+                time += Time.deltaTime * accelation;
+            else
+            {
+                MoveTetrimino(Vector2Int.down);
+                time = 0;
+            }
+
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                MoveTetrimino(Vector2Int.left);
+            }
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                MoveTetrimino(Vector2Int.right);
+            }
+
+            if (Input.GetKeyUp)
+            {
+                spawner.GetCurrentTetrimino
+            }
+
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                accelation = 10f;
+            }
+            if (Input.GetKeyUp(KeyCode.DownArrow))
+                accelation = 1;
+        }
+    }
+
+    private void MoveTetrimino(Vector2Int dir)
+    {
+        var currentTetrimino = spawner.GetCurrentTetrimino;
+        if (grid.IsMovingValidation(currentTetrimino, dir))
+        {
+            currentTetrimino.transform.position += MoveScale(new Vector3(dir.x, dir.y, 0));
+        }
     }
 
     private void KeyInput()
@@ -59,9 +112,7 @@ public class GameManager : MonoBehaviour
         if (currentStatus == GameStatus.Title)
         {
             if (Input.anyKeyDown)
-            {
                 onChangeGameState.Invoke(GameStatus.Lobby);
-            }
         }
         else
         {
@@ -73,12 +124,21 @@ public class GameManager : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.F3))
                 onChangeGameState.Invoke(GameStatus.Option);
+
+            if (Input.GetKeyDown(KeyCode.F4))
+            {
+                Camera.main.orthographic = Camera.main.orthographic ? false : true;
+                Camera.main.orthographicSize = orthoSize;
+            }
         }
     }
 
     private void ControllBlock()
     {
-
+        //if (Input.GetKeyDown(KeyCode.LeftArrow))
+        //if (Input.GetKeyDown(KeyCode.RightArrow))
+        //if (Input.GetKeyDown(KeyCode.UpArrow))
+        //if (Input.GetKeyDown(KeyCode.DownArrow))
     }
 
     private void UpdateStatus(GameStatus status)
@@ -90,7 +150,7 @@ public class GameManager : MonoBehaviour
 
     private void SetSceneEnviroment(GameStatus status)
     {
-        switch(status)
+        switch (status)
         {
             case GameStatus.Lobby:
                 {
@@ -139,5 +199,10 @@ public class GameManager : MonoBehaviour
         gameGroup.SetActive(activeGame);
         resultGroup.SetActive(activeResult);
         optionGroup.SetActive(activeOption);
+    }
+
+    private Vector3 MoveScale(Vector3 direction)
+    {
+        return direction * (Constant.CubeInterval + Constant.CubeScale);
     }
 }
