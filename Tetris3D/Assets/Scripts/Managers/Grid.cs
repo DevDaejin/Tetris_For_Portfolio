@@ -47,16 +47,16 @@ public class Grid
         float xHalf = gridSize.x * 0.5f;
         float yHalf = gridSize.y * 0.5f;
 
-        GameObject o;
-
         for (float y = 0; y < gridSize.y; y++)
         {
             for (float x = 0; x < gridSize.x; x++)
             {
                 positionX = CalcuratePosition(x, gridScale, xHalf, gridInterval);
                 positionY = -CalcuratePosition(y, gridScale, yHalf, gridInterval);
-                Vector3 pos = new Vector3(positionX, positionY, 0);
-                o = Utils.CreateCubeBlock(pos, gridScale, $"{x + 1} {y + 1} tile", container);
+                var pos = new Vector3(positionX, positionY, 0);
+
+                var o = Utils.CreateCubeBlock(pos, gridScale, $"{x + 1} {y + 1} tile", container);
+
                 var m = o.GetComponent<MeshRenderer>();
                 m.material = new Material(Shader.Find(Constant.LitShaderPath));
                 m.material.color = Color.gray;
@@ -104,8 +104,13 @@ public class Grid
 
     private bool IsInTheGrid(Tetrimino tetrimino, Vector2Int moveVector)
     {
-        var newPosition = tetrimino.PositionInGrid + moveVector;
-        if (newPosition.x + tetrimino.GetWidth() < gridSize.x && newPosition.x >= 0 && newPosition.y > -gridSize.y)
+        Vector2Int newPosition = tetrimino.PositionInGrid + moveVector;
+
+        int tetriminoWidth = newPosition.x + tetrimino.GetWidth();
+        int tetriminoWidthOffset = newPosition.x - tetrimino.GetXOffset();
+        int tetriminoHeight = Mathf.Abs(newPosition.y) + tetrimino.GetHeight();
+
+        if (tetriminoWidth < gridSize.x &&  tetriminoWidthOffset >= 0 && tetriminoHeight < gridSize.y )
         {
             return true;
         }
@@ -129,10 +134,6 @@ public class Grid
                 }
             }
         }
-
-        if (y + tetrimino.GetHeight() >= gridSize.y)
-            return true;
-
         return false;
     }
 

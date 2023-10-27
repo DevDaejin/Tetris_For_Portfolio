@@ -83,9 +83,9 @@ public class TetriminoData : MonoBehaviour
         },
         new bool[3,3]
         {
-            {false,     true,     false, },
-            {false,     true,     true,  },
-            {false,     false,    true,  }
+            {true,      false,    false },
+            {true,      true,     false },
+            {false,     true,     false }
         }
     };
 
@@ -99,9 +99,9 @@ public class TetriminoData : MonoBehaviour
         },
         new bool[3,3]
         {
-            { false,    false,  true    },
-            { false,    true,   true    },
-            { false,    true,   false   }
+            { false,    false,    true,   },
+            { false,    true,     true,   },
+            { false,    true,     false,  }
         }
     };
 
@@ -127,9 +127,9 @@ public class TetriminoData : MonoBehaviour
         },
         new bool[3,3]
         {
-            { false,    true,  false    },
-            { false,    true,  false    },
-            { false,    true,  true     }
+            { false,    true,   false,},
+            { false,    true,   false,},
+            { false,    true,   true, }
         }
     };
 
@@ -143,9 +143,9 @@ public class TetriminoData : MonoBehaviour
         },
         new bool[3,3]
         {
-            { false,    true,   true    },
-            { false,    true,   false   },
-            { false,    true,   false   },
+            { false,    true,   true,   },
+            { false,    true,   false,  },
+            { false,    true,   false,  },
         },
         new bool[3,3]
         {

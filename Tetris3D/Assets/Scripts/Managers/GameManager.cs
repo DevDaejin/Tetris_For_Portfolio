@@ -12,7 +12,6 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Transform nextTetriminoGroup;
 
-    private Vector2Int moveAmount = new Vector2Int(0, 0);
     private GameStatus currentStatus;
     private Grid grid;
     private TetriminoSpawner spawner;
@@ -37,7 +36,7 @@ public class GameManager : MonoBehaviour
             grid.GetSpawnPoint,
             nextTetriminoGroup.GetChild(0).position,
             nextTetriminoGroup.GetChild(1).position,
-            nextTetriminoGroup.GetChild(2).position}, 1);
+            nextTetriminoGroup.GetChild(2).position}, tetriminoArraySize);
 
         isStop = true;
 
@@ -55,48 +54,25 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        KeyInput();
-
-        if (!isStop)
-        {
-            if (time < (updateInterval - (level * 0.1f)))
-                time += Time.deltaTime * accelation;
-            else
-            {
-                MoveTetrimino(Vector2Int.down);
-                time = 0;
-            }
-
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                MoveTetrimino(Vector2Int.left);
-            }
-            if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                MoveTetrimino(Vector2Int.right);
-            }
-
-            if (Input.GetKeyUp)
-            {
-                spawner.GetCurrentTetrimino
-            }
-
-            if (Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                accelation = 10f;
-            }
-            if (Input.GetKeyUp(KeyCode.DownArrow))
-                accelation = 1;
-        }
+        KeyInput();        
     }
 
-    private void MoveTetrimino(Vector2Int dir)
+    private bool MoveTetrimino(Vector2Int dir)
     {
         var currentTetrimino = spawner.GetCurrentTetrimino;
         if (grid.IsMovingValidation(currentTetrimino, dir))
         {
             currentTetrimino.transform.position += MoveScale(new Vector3(dir.x, dir.y, 0));
         }
+        else
+        {
+            if (dir == Vector2Int.down)
+            {
+                spawner.GetCurrentTetrimino.Release();
+                return false;
+            }
+        }
+        return true;
     }
 
     private void KeyInput()
@@ -135,17 +111,42 @@ public class GameManager : MonoBehaviour
 
     private void ControllBlock()
     {
-        //if (Input.GetKeyDown(KeyCode.LeftArrow))
-        //if (Input.GetKeyDown(KeyCode.RightArrow))
-        //if (Input.GetKeyDown(KeyCode.UpArrow))
-        //if (Input.GetKeyDown(KeyCode.DownArrow))
+        if (!isStop && spawner.GetCurrentTetrimino != null)
+        {
+            if (time < (updateInterval - (level * 0.1f)))
+                time += Time.deltaTime * accelation;
+            else
+            {
+                MoveTetrimino(Vector2Int.down);
+                time = 0;
+            }
+
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                MoveTetrimino(Vector2Int.left);
+            }
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                MoveTetrimino(Vector2Int.right);
+            }
+            if (Input.GetKeyUp(KeyCode.UpArrow))
+            {
+                spawner.GetCurrentTetrimino.RotateBlock();
+            }
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                accelation = 10f;
+            }
+            if (Input.GetKeyUp(KeyCode.DownArrow))
+                accelation = 1;
+        }
     }
 
     private void UpdateStatus(GameStatus status)
     {
         currentStatus = status;
         SetSceneEnviroment(currentStatus);
-        isStop = currentStatus != GameStatus.Play ? true : false;
+        isStop = currentStatus != GameStatus.Play;
     }
 
     private void SetSceneEnviroment(GameStatus status)
@@ -162,6 +163,7 @@ public class GameManager : MonoBehaviour
                 break;
             case GameStatus.Play:
                 {
+                    spawner.ReleaseAll();
                     spawner.Start();
                     spawner.ShowBlocks(true);
                     grid.ActiveGrid();
