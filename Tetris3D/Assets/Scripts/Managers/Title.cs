@@ -21,38 +21,17 @@ public class Title : Block
     private readonly string textShaderPath = "TextMeshPro/Mobile/Distance Field";
 
     #region Unity leftcycle
-    private void OnEnable()
-    {
-        titleAnimationCoroutine = StartCoroutine(TitleAnimationCoroutine());
-    }
-
-    private void Start()
+    private void Awake()
     {
         blockColors = new Color[] { Color.red, Color.green, Color.blue, Color.yellow, Color.cyan, Constant.Orange, Constant.Purple };
 
         SetData();
         CreateBlock();
         CreateText();
-
-        //TODO : ªË¡¶
-        //var b = new int[3, 4]
-        //{
-        //    {01,02,03,04},
-        //    {05,06,07,08},
-        //    {09,10,11,12},
-        //};
-
-        //string s = string.Empty;
-
-        //for (int row = 0; row < b.GetLength(0); row++)
-        //{
-        //    s += "\n";
-        //    for (int col = 0; col < b.GetLength(1); col++)
-        //    {
-        //        s += $" {b[row, col]} ";
-        //    }
-        //}
-        //Debug.Log(s);
+    }
+    private void OnEnable()
+    {
+        titleAnimationCoroutine = StartCoroutine(TitleAnimationCoroutine());
     }
 
     private void OnDisable()
@@ -120,8 +99,8 @@ public class Title : Block
         GameObject text = new GameObject();
         text.transform.SetParent(transform);
         text.transform.position += Vector3.down * textOffset;
-
         text.AddComponent<MeshRenderer>().material = new Material(Shader.Find(textShaderPath));
+
         tmp = text.AddComponent<TMPro.TextMeshPro>();
         tmp.text = pressAnyKey;
         tmp.alignment = TMPro.TextAlignmentOptions.Center;

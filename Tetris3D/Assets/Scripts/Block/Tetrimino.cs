@@ -6,178 +6,238 @@ using UnityEngine.Pool;
 
 public class Tetrimino : Block
 {
-    
-    public TetriminoType GetTetriminoType { get => tetriminoType; }
-    public Vector2Int PositionInGrid { get => positionInGrid; set => positionInGrid = value; }
+    public TetriminoType TetriminoType { private set; get; }
+    public Vector2Int PositionInGrid { set; get; }
+    public Dictionary<Boundary, int> BoundaryDict { private set; get; } = new Dictionary<Boundary, int>();
+    public Color BlockColor { get => blockColor; }
+    public bool[,] CurrentArray { get => allArray[rotate]; }
+    private bool[][,] allArray;
 
-    private ObjectPool<Tetrimino> pool;
-    private TetriminoType tetriminoType;
-    private Vector2Int positionInGrid;
+    private GameObject[,] gameObjectsArray;
+    private ObjectPool<Tetrimino> tetriminoPool;
 
-    private int rotate = 0;
-    private int rotateLength = 0;
+    private int rotate;
+    private int rotateLength;
 
-    private GameObject[,] GameObjectsArray = new GameObject[,] {{null, null, null, null},
-                                                                {null, null, null, null},
-                                                                {null, null, null, null},
-                                                                {null, null, null, null}};
-
-    public void Initialize(ObjectPool<Tetrimino> tetriminoPool)
+    public void Create(ObjectPool<Tetrimino> tetriminoPool)
     {
-        pool = tetriminoPool;
+        gameObjectsArray = new GameObject[4, 4];
+
+        this.tetriminoPool = tetriminoPool;
         material = new Material(Shader.Find(Constant.LitShaderPath));
 
-        for (int dim1 = 0; dim1 < 4; dim1++)
+        for (int row = 0; row < 4; row++)
         {
-            for (int dim2 = 0; dim2 < 4; dim2++)
+            for (int col = 0; col < 4; col++)
             {
                 Vector3 pos = new Vector3(
-                        ( dim2 * (Constant.CubeScale + Constant.CubeInterval)),
-                        (-dim1 * (Constant.CubeScale + Constant.CubeInterval)), 0);
+                        (col * (Constant.CubeScale + Constant.CubeInterval)),
+                        (-row * (Constant.CubeScale + Constant.CubeInterval)), 0);
 
-                var o = Utils.CreateCubeBlock(pos, Constant.CubeScale, parent: transform);
-                o.name = $"{dim1 + 1} / {dim2 + 1}";
+                var o = Utils.CreateCubeBlock(pos, Constant.CubeScale, $"{row + 1} / {col + 1}", transform);
                 o.SetActive(false);
-                GameObjectsArray[dim1, dim2] = o;
+
+                gameObjectsArray[row, col] = o;
             }
         }
     }
 
-    public void SetTetrimino()
+    public void Initialize()
+    {
+        var seed = Enum.GetValues(typeof(TetriminoType));
+        TetriminoType = (TetriminoType)seed.GetValue(UnityEngine.Random.Range(0, seed.Length));
+
+        Initialize(TetriminoType);
+    }
+
+    public void Initialize(TetriminoType type)
     {
         rotate = 0;
-
-        var seed = Enum.GetValues(typeof(TetriminoType));
-        tetriminoType = (TetriminoType)seed.GetValue(UnityEngine.Random.Range(0, seed.Length));
-        UpdateBlock(tetriminoType);
+        TetriminoType = type;
+        PositionInGrid = Vector2Int.zero;
+        Set(TetriminoType);
     }
 
-    public void RotateBlock()
-    {
-        rotate++;
-
-        if (rotate >= rotateLength)
-            rotate = 0;
-
-        UpdateBlock(tetriminoType);
-    }
-
-    private void UpdateBlock(TetriminoType tetriminoType)
+    private void Set(TetriminoType tetriminoType)
     {
         switch (tetriminoType)
         {
             case TetriminoType.I:
-                    UpdateBlock(Color.cyan, TetriminoData.IArray);
+                Set(Color.cyan, TetriminoData.IArray);
                 break;
             case TetriminoType.O:
-                    UpdateBlock(Color.yellow, TetriminoData.OArray);
+                Set(Color.yellow, TetriminoData.OArray);
                 break;
             case TetriminoType.T:
-                    UpdateBlock(Constant.Purple, TetriminoData.TArray);
+                Set(Constant.Purple, TetriminoData.TArray);
                 break;
             case TetriminoType.S:
-                    UpdateBlock(Color.green, TetriminoData.SArray);
+                Set(Color.green, TetriminoData.SArray);
                 break;
             case TetriminoType.Z:
-                    UpdateBlock(Color.red, TetriminoData.ZArray);
+                Set(Color.red, TetriminoData.ZArray);
                 break;
             case TetriminoType.L:
-                    UpdateBlock(Constant.Orange, TetriminoData.LArray);
+                Set(Constant.Orange, TetriminoData.LArray);
                 break;
             case TetriminoType.J:
-                    UpdateBlock(Color.blue, TetriminoData.JArray);
+                Set(Color.blue, TetriminoData.JArray);
                 break;
         }
     }
 
-    private void UpdateBlock(Color color, bool[][,] allArray)
+
+    private void Set(Color color, bool[][,] allArray)
     {
         blockColor = color;
-        array = allArray[rotate];
+        this.allArray = allArray;
+        
+        SetBlocks();
+    }
 
+    private void SetBlocks()
+    {
         rotateLength = allArray.GetLength(0);
+        OffAllBlock();
 
-        for (int dim1 = 0; dim1 < array.GetLength(0); dim1++)
+        for (int row = 0; row < CurrentArray.GetLength(0); row++)
         {
-            for (int dim2 = 0; dim2 < array.GetLength(1); dim2++)
+            for (int col = 0; col < CurrentArray.GetLength(1); col++)
             {
- 
-                if (GetArray[dim1, dim2])
+
+                if (CurrentArray[row, col])
                 {
-                    material.SetColor(colorPropertyName, blockColor);
-                    GameObjectsArray[dim1, dim2].GetComponent<MeshRenderer>().material = material;
-                    GameObjectsArray[dim1, dim2].SetActive(true);
+                    material.color = blockColor;
+                    gameObjectsArray[row, col].GetComponent<MeshRenderer>().material = material;
+                    gameObjectsArray[row, col].SetActive(true);
                 }
+                else
+                    gameObjectsArray[row, col].SetActive(false);
             }
         }
 
-        if (array.GetLength(0) != 4 || array.GetLength(1) != 4)
+        GetMin();
+        GetMax();
+    }
+
+    public void SetPosition(Vector2Int moveVector)
+    {
+        PositionInGrid += moveVector;
+        transform.position += Utils.MoveScale(new Vector3(moveVector.x, moveVector.y, 0));
+    }
+
+    public void InitPosition(Vector3 currentPosition, Vector2Int moveVector)
+    {
+        PositionInGrid += moveVector;
+        transform.position = currentPosition;
+    }
+
+
+    public void Rotate(bool isCW = true)
+    {
+        if (isCW)
+            rotate++;
+        else
+            rotate--;
+
+        if (rotate >= rotateLength)
+            rotate = 0;
+
+        if (rotate < 0)
+            rotate = rotateLength - 1;
+
+        SetBlocks();
+    }
+
+    public bool[,] NextRotateArray()
+    {
+        int next = rotate + 1;
+
+        if (next >= rotateLength)
+            next = 0;
+
+        return allArray[next]; 
+    }
+
+    private void OffAllBlock()
+    {
+        for (int row = 0; row < gameObjectsArray.GetLength(0); row++)
         {
-            for (int dim1 = array.GetLength(0); dim1 < 4; dim1++)
+            for (int col = 0; col < gameObjectsArray.GetLength(1); col++)
             {
-                for (int dim2 = array.GetLength(1); dim2 < 4; dim2++)
+                gameObjectsArray[row, col].SetActive(false);
+            }
+        }
+    }
+
+
+    public Vector3 OffsetToCenter()
+    {
+        float scaleValue = Constant.CubeScale + Constant.CubeInterval;
+        float length = CurrentArray.GetLength(0);
+        float centerOfArray = length * 0.5f;
+
+        float x = (centerOfArray - scaleValue) * scaleValue;
+        float y = (-(centerOfArray - scaleValue) * scaleValue) + ((CurrentArray.GetLength(1) - BoundaryDict[Boundary.Bottom] - BoundaryDict[Boundary.Top]) * scaleValue * 0.5f);
+
+        return new Vector3(x, y, 0);
+    }
+
+
+    public void GetMin()
+    {
+        BoundaryDict[Boundary.Left] = int.MinValue;
+        BoundaryDict[Boundary.Top] = int.MinValue;
+
+        for (int row = 0; row < CurrentArray.GetLength(0); row++)
+        {
+            for (int col = 0; col < CurrentArray.GetLength(1); col++)
+            {
+                if (CurrentArray[row, col])
                 {
-                    GameObjectsArray[dim1, dim2].SetActive(false);
+                    if (BoundaryDict[Boundary.Left] == int.MinValue ||
+                        BoundaryDict[Boundary.Left] > col)
+                        BoundaryDict[Boundary.Left] = col;
+
+                    if (BoundaryDict[Boundary.Top] == int.MinValue ||
+                        BoundaryDict[Boundary.Top] > row)
+                        BoundaryDict[Boundary.Top] = row;
                 }
             }
         }
     }
 
-    public int GetHeight()
+    public void GetMax()
     {
-        int height = 0;
-        for (int row = 0; row < array.GetLength(0); row++)
-        {
-            for (int col = 0; col < array.GetLength(1); col++)
-            {
-                if (array[row, col] && height < row)
-                    height = row;
-            }
-        }
-        return height;
-    }
+        BoundaryDict[Boundary.Right] = int.MaxValue;
+        BoundaryDict[Boundary.Bottom] = int.MaxValue;
 
-    public int GetWidth()
-    {
-        int width = 0;
-        for (int row = 0; row < array.GetLength(0); row++)
+        for (int row = CurrentArray.GetLength(0) - 1; row >= 0; row--)
         {
-            for (int col = 0; col < array.GetLength(1); col++)
+            for (int col = CurrentArray.GetLength(1) - 1; col >= 0; col--)
             {
-                if (array[row, col] && width < col)
-                    width = col;
-            }
-        }
-        return width;
-    }
-
-    public int GetXOffset()
-    {
-        int offset = 0;
-        bool isDone = false;
-        for (int col = 0; col < array.GetLength(1); col++)
-        {
-            for (int row = 0; row < array.GetLength(0); row++)
-            {
-                if (array[row, col])
+                if (CurrentArray[row, col])
                 {
-                    isDone = true;
-                    break;
+                    if (BoundaryDict[Boundary.Right] == int.MaxValue ||
+                        BoundaryDict[Boundary.Right] < col)
+                        BoundaryDict[Boundary.Right] = col;
+
+                    if (BoundaryDict[Boundary.Bottom] == int.MaxValue ||
+                        BoundaryDict[Boundary.Bottom] < row)
+                        BoundaryDict[Boundary.Bottom] = row;
                 }
             }
-            if (isDone)
-                break;
-            else
-                offset++;
         }
-        return offset;
+
+        BoundaryDict[Boundary.Right] += 1;
+        BoundaryDict[Boundary.Bottom] += 1;
     }
 
     public void Release()
     {
-        if (pool != null)
+        if (tetriminoPool != null)
         {
-            pool.Release(this);            
+            tetriminoPool.Release(this);
         }
     }
 }

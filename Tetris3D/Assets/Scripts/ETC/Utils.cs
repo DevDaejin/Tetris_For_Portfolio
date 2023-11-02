@@ -13,4 +13,9 @@ public class Utils
         o.transform.localPosition = localPosition;
         return o;
     }
+
+    public static  Vector3 MoveScale(Vector3 direction)
+    {
+        return direction * (Constant.CubeInterval + Constant.CubeScale);
+    }
 }

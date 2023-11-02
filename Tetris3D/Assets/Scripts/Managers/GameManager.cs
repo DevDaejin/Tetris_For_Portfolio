@@ -14,73 +14,63 @@ public class GameManager : MonoBehaviour
 
     private GameStatus currentStatus;
     private Grid grid;
-    private TetriminoSpawner spawner;
+    private TetriminoManager tetriminoManager;
     private Sound sound;
+    private Tetrimino currentTetrimino;
+
+
     private int level;
-    private float updateInterval = 1f;
-    private float accelation = 1;
-    private float time = 0;
-    private float orthoSize = 5.8f;
     private bool isStop;
+
+    private float accelation;
+    private float time = 0;
+    
+    private readonly float updateInterval = 1f;
+    private readonly float orthoSize = 5.8f;
     private const int tetriminoArraySize = 4;
+    private const float normalAccelation = 1;
+    private const float fastAccelation = 30;
 
     private UnityEvent<GameStatus> onChangeGameState = new UnityEvent<GameStatus>();
     void Start()
     {
+        Application.targetFrameRate = 60;
+
         currentStatus = GameStatus.Title;
 
         sound = GetComponent<Sound>();
-        grid = new Grid(Constant.GridSize.x, Constant.GridSize.y, Constant.CubeScale, Constant.CubeInterval);
 
-        spawner = new TetriminoSpawner(new Vector3[tetriminoArraySize] {
-            grid.GetSpawnPoint,
-            nextTetriminoGroup.GetChild(0).position,
-            nextTetriminoGroup.GetChild(1).position,
-            nextTetriminoGroup.GetChild(2).position}, tetriminoArraySize);
+        grid = new Grid(Constant.GridSize, Constant.CubeScale, Constant.CubeInterval);
+
+        tetriminoManager = gameObject.AddComponent<TetriminoManager>();
+        tetriminoManager.Init(new Vector3[tetriminoArraySize] 
+            {
+                grid.GetSpawnPoint,
+                nextTetriminoGroup.GetChild(0).position,
+                nextTetriminoGroup.GetChild(1).position,
+                nextTetriminoGroup.GetChild(2).position
+            }, 
+            new Vector2Int(Constant.SpawnRow, 0), 
+            tetriminoArraySize);
+        
+        tetriminoManager.OnUpdateCurretTetrimino.AddListener((t) => currentTetrimino = t);
 
         isStop = true;
 
         onChangeGameState.AddListener(UpdateStatus);
         onChangeGameState.Invoke(GameStatus.Title);
 
-        Init();
-    }
-
-    private void Init()
-    {
-        level = 0;
+        level = 1;
         time = 0;
+        accelation = normalAccelation;
     }
 
     private void Update()
     {
-        KeyInput();        
-    }
-
-    private bool MoveTetrimino(Vector2Int dir)
-    {
-        var currentTetrimino = spawner.GetCurrentTetrimino;
-        if (grid.IsMovingValidation(currentTetrimino, dir))
-        {
-            currentTetrimino.transform.position += MoveScale(new Vector3(dir.x, dir.y, 0));
-        }
-        else
-        {
-            if (dir == Vector2Int.down)
-            {
-                spawner.GetCurrentTetrimino.Release();
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void KeyInput()
-    {
         ChangeGameStatusByInput();
 
         if (currentStatus == GameStatus.Play && !isStop)
-            ControllBlock();
+            ControllTetrimino();
     }
 
     private void ChangeGameStatusByInput()
@@ -90,55 +80,20 @@ public class GameManager : MonoBehaviour
             if (Input.anyKeyDown)
                 onChangeGameState.Invoke(GameStatus.Lobby);
         }
-        else
+
+        if (Input.GetKeyDown(KeyCode.F1))
+            onChangeGameState.Invoke(GameStatus.Title);
+
+        if (Input.GetKeyDown(KeyCode.F2))
+            onChangeGameState.Invoke(GameStatus.Play);
+
+        if (Input.GetKeyDown(KeyCode.F3))
+            onChangeGameState.Invoke(GameStatus.Option);
+
+        if (Input.GetKeyDown(KeyCode.F4))
         {
-            if (Input.GetKeyDown(KeyCode.F1))
-                onChangeGameState.Invoke(GameStatus.Title);
-
-            if (Input.GetKeyDown(KeyCode.F2))
-                onChangeGameState.Invoke(GameStatus.Play);
-
-            if (Input.GetKeyDown(KeyCode.F3))
-                onChangeGameState.Invoke(GameStatus.Option);
-
-            if (Input.GetKeyDown(KeyCode.F4))
-            {
-                Camera.main.orthographic = Camera.main.orthographic ? false : true;
-                Camera.main.orthographicSize = orthoSize;
-            }
-        }
-    }
-
-    private void ControllBlock()
-    {
-        if (!isStop && spawner.GetCurrentTetrimino != null)
-        {
-            if (time < (updateInterval - (level * 0.1f)))
-                time += Time.deltaTime * accelation;
-            else
-            {
-                MoveTetrimino(Vector2Int.down);
-                time = 0;
-            }
-
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                MoveTetrimino(Vector2Int.left);
-            }
-            if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                MoveTetrimino(Vector2Int.right);
-            }
-            if (Input.GetKeyUp(KeyCode.UpArrow))
-            {
-                spawner.GetCurrentTetrimino.RotateBlock();
-            }
-            if (Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                accelation = 10f;
-            }
-            if (Input.GetKeyUp(KeyCode.DownArrow))
-                accelation = 1;
+            Camera.main.orthographic = Camera.main.orthographic ? false : true;
+            Camera.main.orthographicSize = orthoSize;
         }
     }
 
@@ -155,20 +110,30 @@ public class GameManager : MonoBehaviour
         {
             case GameStatus.Lobby:
                 {
-                    spawner.ReleaseAll();
-                    spawner.ShowBlocks(false);
+                    tetriminoManager.DeleteAllTetrimino();
+                    tetriminoManager.ShowBlocks(false);
+
                     sound.StopBGM();
+
                     ActiveSceneObjectByStatus(activeGame: true);
                 }
                 break;
             case GameStatus.Play:
                 {
-                    spawner.ReleaseAll();
-                    spawner.Start();
-                    spawner.ShowBlocks(true);
+                    level = 1;
+                    
+                    grid.InitGrid();
                     grid.ActiveGrid();
+                    
+                    tetriminoManager.DeleteAllTetrimino();
+                    tetriminoManager.CreateAndStart();
+                    tetriminoManager.ShowBlocks(true);
+
                     sound.PlayBGM(BGM.Game);
+
                     ActiveSceneObjectByStatus(activeGame: true);
+
+                    UpdateGhostStatus();
                 }
                 break;
             case GameStatus.Result:
@@ -185,14 +150,93 @@ public class GameManager : MonoBehaviour
             case GameStatus.Title:
             default:
                 {
-                    spawner.ReleaseAll();
-                    spawner.ShowBlocks(false);
                     grid.ActiveGrid(false);
+
+                    tetriminoManager.DeleteAllTetrimino();
+                    tetriminoManager.ShowBlocks(false);
+
                     sound.PlayBGM(BGM.Title);
                     ActiveSceneObjectByStatus(activeTitle: true);
                 }
                 break;
         }
+    }
+
+    private void ControllTetrimino()
+    {
+        if (!isStop && currentTetrimino != null)
+        {
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+                MoveTetrimino(Vector2Int.left);
+
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+                MoveTetrimino(Vector2Int.right);
+
+            if (Input.GetKeyUp(KeyCode.UpArrow))
+                RotateTetrimino();
+
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+                accelation = fastAccelation;
+
+            if (Input.GetKeyUp(KeyCode.DownArrow))
+                accelation = normalAccelation;
+
+            if (time < (updateInterval - (level * 0.1f)))
+            {
+                time += Time.deltaTime * accelation;
+            }
+            else
+            {
+                MoveTetrimino(Vector2Int.down);
+                time = 0;
+            }
+        }
+    }
+
+    private void MoveTetrimino(Vector2Int dir)
+    {
+        if (grid.IsMovingValidation(currentTetrimino, dir))
+        {
+            currentTetrimino.SetPosition(dir);
+            UpdateGhostStatus();
+        }
+        else
+        {
+            if (grid.IsCollision(currentTetrimino, Vector2Int.down))
+            {
+                grid.AddTetriminoInfo(currentTetrimino);
+                currentTetrimino.Release();
+            }
+        }
+    }
+
+    private void RotateTetrimino()
+    {
+        if (grid.IsRotateValidation(currentTetrimino.NextRotateArray(), currentTetrimino.PositionInGrid))
+        {
+            var kicked = grid.WallKick(currentTetrimino);
+            currentTetrimino.SetPosition(kicked);
+
+            currentTetrimino.Rotate();
+            UpdateGhostStatus(true);
+
+            if (!grid.IsRotateValidation(currentTetrimino.CurrentArray, currentTetrimino.PositionInGrid))
+            {
+                currentTetrimino.Rotate(false);
+                UpdateGhostStatus(true, false);
+
+                currentTetrimino.SetPosition(-kicked);
+            }
+        }
+    }
+
+    private void UpdateGhostStatus(bool isRotate = false, bool isCW = true)
+    {
+        if (isRotate)
+            tetriminoManager.Ghost.Rotate(isCW);
+
+        var height = grid.CheckHighestBlock(currentTetrimino);
+        tetriminoManager.UpdateGhostPosition(height);
     }
 
     private void ActiveSceneObjectByStatus(bool activeTitle = false, bool activeGame = false, bool activeResult = false, bool activeOption = false)
@@ -201,10 +245,5 @@ public class GameManager : MonoBehaviour
         gameGroup.SetActive(activeGame);
         resultGroup.SetActive(activeResult);
         optionGroup.SetActive(activeOption);
-    }
-
-    private Vector3 MoveScale(Vector3 direction)
-    {
-        return direction * (Constant.CubeInterval + Constant.CubeScale);
     }
 }

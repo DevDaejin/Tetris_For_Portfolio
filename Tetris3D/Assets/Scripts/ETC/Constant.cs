@@ -10,7 +10,7 @@ public class Constant
     public const float CubeScale = 0.4f;
     public const float CubeInterval = 0.03f;
 
-    public const int SpawnRow = 5;
+    public const int SpawnRow = 4;
     public const int TetriminoSize = 4;
     public const string LitShaderPath = "Universal Render Pipeline/Lit";
 }

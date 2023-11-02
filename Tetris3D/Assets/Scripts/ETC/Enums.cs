@@ -1,5 +1,6 @@
 public enum GameStatus { Title, Lobby, Play, Option, Result }
 public enum TetriminoType { I, O, T, Z, S, L, J};
+public enum Boundary { Left, Top, Right, Bottom };
 public enum BlockType { Empty, Block, Wall };
 
 public enum BGM { Title, Game, Result};
