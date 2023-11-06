@@ -19,12 +19,12 @@ public class Grid
     public int Width { private set; get; }
     public int Height { private set; get; }
 
+    public UnityEvent<int> OnRemoveLine = new UnityEvent<int>();
     public UnityEvent OnGameOver = new UnityEvent();
 
     private Shader gridShader;
     private Transform container;
 
-    private readonly int deadLine = 2;
     private readonly string containerName = "Grid";
     private readonly string empty = " ¡Û ";
     private readonly string full = " ¡Ü ";
@@ -205,8 +205,12 @@ public class Grid
 
         CheckFullLine();
 
-        if (toBeRemoveLineList.Count > 0)
+        int removeLineCount = toBeRemoveLineList.Count;
+        if (removeLineCount > 0)
+        {
+            OnRemoveLine.Invoke(removeLineCount);
             RemoveLine();
+        }
     }
 
     public bool IsCollision(Tetrimino tetrimino, Vector2Int moveVector)

@@ -18,6 +18,9 @@ public class Tetrimino : Block
 
     private int rotate;
     private int rotateLength;
+    private bool isGhost = false;
+
+    private readonly float ghostAlpha = .3f;
 
     public void Create(ObjectPool<Tetrimino> tetriminoPool)
     {
@@ -50,11 +53,12 @@ public class Tetrimino : Block
         Initialize(TetriminoType);
     }
 
-    public void Initialize(TetriminoType type)
+    public void Initialize(TetriminoType type, bool isGhost = false)
     {
         rotate = 0;
         TetriminoType = type;
         PositionInGrid = Vector2Int.zero;
+        this.isGhost = isGhost;
         Set(TetriminoType);
     }
 
@@ -89,7 +93,14 @@ public class Tetrimino : Block
 
     private void Set(Color color, bool[][,] allArray)
     {
-        blockColor = color;
+        Color colorOffset = Color.clear;
+        if(isGhost)
+        {
+            colorOffset.a = ghostAlpha;
+            material.set
+        }
+
+        blockColor = color - ();
         this.allArray = allArray;
         
         SetBlocks();

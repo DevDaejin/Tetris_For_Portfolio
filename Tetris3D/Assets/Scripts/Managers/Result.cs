@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,9 +23,8 @@ public class Result : MonoBehaviour
     private readonly int maxSizeOfDatas = 10;
     private readonly string defaultNickName = "annanymous";
     private readonly string point = "points";
-    private readonly string fileSubPath = "/RankData";
-    private readonly string fileName = "/rank.json";
-    private readonly string infoPath = "Info";
+    private readonly string fileSubPath = "RankData";
+    private readonly string fileName = "rank.json";
     private readonly string namePath = "Name";
     private readonly string scorePath = "Score";
 
@@ -38,28 +36,17 @@ public class Result : MonoBehaviour
 
     private List<Data> datas = new List<Data>();
 
-    private void OnEnable()
-    {
-        LoadData();
-        SetRank();
-
-        if (datas.Count != 0)
-        {
-            if (datas[maxSizeOfDatas - 1].score < score)
-            {
-                submit.interactable = true;
-                inputField.interactable = true;
-            }
-        }
-    }
-
     private void Start()
     {
         submit.onClick.AddListener(Submit);
         regame.onClick.AddListener(OnRegameButtonEvent.Invoke);
-
         score = 0;
-        SetScore(score);
+    }
+
+    public void UpdateRank()
+    {
+        datas = LoadData();
+        SetRank();
     }
 
     private List<Data> LoadData()
@@ -107,14 +94,23 @@ public class Result : MonoBehaviour
             score = this.score
         });
 
-        SaveData();
         SetRank();
+        SaveData();        
     }
 
     public void SetScore(int score)
     {
         this.score = score;
         scroeTxt.text = $"{score.ToString("N0")} {point}";
+
+        if (datas.Count > 0)
+        {
+            if (datas[maxSizeOfDatas - 1].score < score)
+            {
+                submit.interactable = true;
+                inputField.interactable = true;
+            }
+        }
     }
 
     private void SetRank()
@@ -131,10 +127,9 @@ public class Result : MonoBehaviour
             }
         }
 
-        if(datas.Count > maxSizeOfDatas)
+        if (datas.Count > maxSizeOfDatas)
         {
-            datas.Sort();
-            datas.Reverse();
+            datas = datas.OrderByDescending(data => data.score).ToList();
 
             while(datas.Count > maxSizeOfDatas)
             {
@@ -142,7 +137,7 @@ public class Result : MonoBehaviour
             }
         }
 
-        if(rankChildren.Count == 0)
+        if (rankChildren.Count == 0)
         {
             var tempChildren = rank.GetComponentsInChildren<Transform>(true).ToList();
 

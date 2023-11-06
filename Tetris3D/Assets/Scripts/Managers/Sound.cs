@@ -29,7 +29,7 @@ public class Sound : MonoBehaviour
         sfxSource.loop = false;
     }
 
-    public void PlaySFX(SFX sfx, float pitch)
+    public void PlaySFX(SFX sfx, float pitch = 1)
     {
         sfxSource.pitch = pitch;
         sfxSource.PlayOneShot(sfxClip[(int)sfx], sfxVolume);

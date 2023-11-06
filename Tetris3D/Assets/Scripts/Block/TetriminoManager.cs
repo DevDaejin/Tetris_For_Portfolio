@@ -45,6 +45,9 @@ public class TetriminoManager : MonoBehaviour
         {
             tetriminoPool.Get();
         }
+
+        currentTetrimino = null;
+        OnUpdateCurretTetrimino.Invoke(currentTetrimino);
         UpdateTetrisWaittingQueue(false);
     }
 
@@ -110,7 +113,7 @@ public class TetriminoManager : MonoBehaviour
         if (tetrimino == null)
             return;
 
-        Ghost.Initialize(tetrimino.TetriminoType);
+        Ghost.Initialize(tetrimino.TetriminoType, true);
     }
 
     public void UpdateGhostPosition(int height)
