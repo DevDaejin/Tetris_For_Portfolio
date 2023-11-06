@@ -115,9 +115,13 @@ public class TetriminoManager : MonoBehaviour
 
     public void UpdateGhostPosition(int height)
     {
-        var calculatedHeight = height - Mathf.Abs(currentTetrimino.PositionInGrid.y - currentTetrimino.BoundaryDict[Boundary.Bottom]);
         Ghost.transform.position = currentTetrimino.transform.position;
-        Ghost.SetPosition(Vector2Int.down * calculatedHeight);
+        Ghost.SetPosition(Vector2Int.up * height);
+    }
+
+    public void HardDrop(int height)
+    {
+        currentTetrimino.SetPosition(Vector2Int.up * height);
     }
 
     public void DeleteAllTetrimino()

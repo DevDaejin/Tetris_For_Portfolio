@@ -128,8 +128,8 @@ public class Tetrimino : Block
 
     public void InitPosition(Vector3 currentPosition, Vector2Int moveVector)
     {
-        PositionInGrid += moveVector;
         transform.position = currentPosition;
+        PositionInGrid = moveVector;
     }
 
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Grid
 {
@@ -12,16 +13,18 @@ public class Grid
     private float containerZOffset = 0.1f;
 
     private bool[,] grid;
-    private Vector2Int gridSize;
     private float gridScale;
     private float gridInterval;
 
-    public int RowLength { private set; get; }
-    public int ColLength { private set; get; }
+    public int Width { private set; get; }
+    public int Height { private set; get; }
+
+    public UnityEvent OnGameOver = new UnityEvent();
 
     private Shader gridShader;
     private Transform container;
 
+    private readonly int deadLine = 2;
     private readonly string containerName = "Grid";
     private readonly string empty = " ○ ";
     private readonly string full = " ● ";
@@ -30,10 +33,9 @@ public class Grid
     {
         this.gridScale = gridScale;
         this.gridInterval = gridInterval;
-        this.gridSize = new Vector2Int(gridSize.x, gridSize.y);
 
-        RowLength = gridSize.x;
-        ColLength = gridSize.y;
+        Width = gridSize.x;
+        Height = gridSize.y;
 
         gridShader = Shader.Find(Constant.LitShaderPath);
         GenerateGrid();
@@ -44,27 +46,27 @@ public class Grid
         container = new GameObject(containerName).transform;
         container.SetPositionAndRotation(Vector3.forward * containerZOffset, Quaternion.identity);
 
-        grid = new bool[gridSize.x, gridSize.y];
+        grid = new bool[Width, Height];
 
-        float gridWidthHalf = gridSize.x * 0.5f;
-        float gridHeightHalf = gridSize.y * 0.5f;
+        float gridWidthHalf = Width * 0.5f;
+        float gridHeightHalf = Height * 0.5f;
 
-        for (int y = 0; y < gridSize.y; y++)
+        for (int col = 0; col < Height; col++)
         {
-            for (int x = 0; x < gridSize.x; x++)
+            for (int row = 0; row < Width; row++)
             {
-                grid[x, y] = false;
+                grid[row, col] = false;
 
-                float positionX = CalcuratePosition(x, gridWidthHalf);
-                float positionY = -CalcuratePosition(y, gridHeightHalf);
+                float positionX = CalcuratePosition(row, gridWidthHalf);
+                float positionY = -CalcuratePosition(col, gridHeightHalf);
                 var pos = new Vector3(positionX, positionY, 0);
-                var o = Utils.CreateCubeBlock(pos, gridScale, $"{x + 1} {y + 1}", container);
+                var o = Utils.CreateCubeBlock(pos, gridScale, $"{row + 1} {col + 1}", container);
 
                 var m = o.GetComponent<MeshRenderer>();
                 m.material = new Material(gridShader);
                 m.material.color = Color.gray;
 
-                if (x == Constant.SpawnRow && y == 0)
+                if (row == Constant.SpawnRow && col == 0)
                     spawnPoint = o.transform.localPosition;
             }
         }
@@ -74,7 +76,7 @@ public class Grid
 
     public void InitGrid()
     {
-        grid = new bool[gridSize.x, gridSize.y];
+        grid = new bool[Width, Height];
         container.GetComponentsInChildren<MeshRenderer>().ToList().ForEach((mr) => mr.material.color = Color.gray);
     }
 
@@ -122,7 +124,7 @@ public class Grid
             {
                 var x = row + positionInGrid.x;
                 var y = col + Mathf.Abs(positionInGrid.y);
-                if (x > 0 && x < gridSize.x && y > 0 && y < gridSize.y)
+                if (x > 0 && x < Width && y > 0 && y < Height)
                 {
                     if (grid[x, y] && array[row, col])
                         return false;
@@ -135,35 +137,22 @@ public class Grid
 
     public int CheckHighestBlock(Tetrimino tetrimino)
     {
-        var boundary = tetrimino.BoundaryDict;
-        var posInGrid = tetrimino.PositionInGrid;
+        bool isMovable = true;
+        Vector2Int moveVector = Vector2Int.zero;
 
-        int left = posInGrid.x + boundary[Boundary.Left];
-        int right = posInGrid.x + boundary[Boundary.Right];
-        int top = Mathf.Abs(posInGrid.y);
-        int bottom = top + boundary[Boundary.Bottom];
-
-        int highest = ColLength;
-
-        for (int row = left; row < right; row++)
+        while (isMovable)
         {
-            for (int col = top; col < ColLength; col++)
-            {
-                if (grid[row, col] && highest > col)
-                {
-                    highest = col;
-                }
-            }
+            moveVector += Vector2Int.down;
+            isMovable = IsMovingValidation(tetrimino, moveVector);
         }
 
-        return highest;
+        return moveVector.y + 1;
     }
 
     public bool IsMovingValidation(Tetrimino tetrimino, Vector2Int moveVector)
     {
         if (IsInTheGrid(tetrimino, moveVector) && !IsCollision(tetrimino, moveVector))
         {
-            //tetrimino.PositionInGrid += moveVector;
             return true;
         }
 
@@ -179,9 +168,9 @@ public class Grid
         int tetriminoTop = Mathf.Abs(newPosition.y) + tetrimino.BoundaryDict[Boundary.Top];
         int tetriminoBottom = Mathf.Abs(newPosition.y);
 
-        if (tetriminoRight <= gridSize.x &&
+        if (tetriminoRight <= Width &&
             tetriminoLeft >= -tetrimino.BoundaryDict[Boundary.Left] &&
-            tetriminoBottom <= gridSize.y - tetrimino.BoundaryDict[Boundary.Bottom] &&
+            tetriminoBottom <= Height - tetrimino.BoundaryDict[Boundary.Bottom] &&
             tetriminoTop >= 0)
         {
             return true;
@@ -199,12 +188,16 @@ public class Grid
                 var x = row + tetrimino.PositionInGrid.x;
                 var y = col + Mathf.Abs(tetrimino.PositionInGrid.y);
 
-                if (x >= 0 && x < RowLength && y < ColLength)
+                if (x >= 0 && x < Width && y < Height)
                 {
                     if (tetrimino.CurrentArray[col, row])
                     {
                         grid[x, y] = tetrimino.CurrentArray[col, row];
                         SetGridColor(x, y, tetrimino.BlockColor);
+
+                        if (x >= Constant.SpawnRow && x <= Constant.SpawnRow + 4 &&
+                           y >= 0 && y <= 1)
+                            OnGameOver.Invoke();
                     }
                 }
             }
@@ -226,16 +219,18 @@ public class Grid
                 int y = col + Mathf.Abs(tetrimino.PositionInGrid.y + moveVector.y);
 
                 //이미 그리드에 있는지 확인
-                if (x < RowLength && x >= 0 && y < ColLength)
+                if (x < Width && x >= 0 && y < Height)
                 {
                     if (grid[x, y] && tetrimino.CurrentArray[col, row])
+                    {
                         return true;
+                    }
                 }
 
                 //바닥에 닿을 때
-                if (moveVector.y == -1)
+                if (moveVector.y < 0)
                 {
-                    if (ColLength == Mathf.Abs(tetrimino.PositionInGrid.y) + tetrimino.BoundaryDict[Boundary.Bottom])
+                    if (Height == Mathf.Abs(tetrimino.PositionInGrid.y) + tetrimino.BoundaryDict[Boundary.Bottom])
                         return true;
                 }
             }
@@ -246,15 +241,15 @@ public class Grid
     private void CheckFullLine()
     {
         int count = 0;
-        for (int col = 0; col < ColLength; col++)
+        for (int col = 0; col < Height; col++)
         {
-            for (int row = 0; row < RowLength; row++)
+            for (int row = 0; row < Width; row++)
             {
                 if (grid[row, col])
                     count++;
             }
 
-            if (count == RowLength)
+            if (count == Width)
                 toBeRemoveLineList.Add(col);
 
             count = 0;
@@ -269,9 +264,9 @@ public class Grid
         for (int i = 0; i < count; i++)
         {
             int line = toBeRemoveLineList[0];
-            for (int col = ColLength - 1; col > 0; col--)
+            for (int col = Height - 1; col > 0; col--)
             {
-                for (int row = 0; row < RowLength; row++)
+                for (int row = 0; row < Width; row++)
                 {
                     if (line >= col)
                     {
@@ -289,25 +284,25 @@ public class Grid
 
     private void SetGridColor(int row, int col, Color color)
     {
-        int childCount = (col * RowLength + row);
+        int childCount = (col * Width + row);
         container.GetChild(childCount).GetComponent<MeshRenderer>().material.color = color;
     }
 
     private Color GetGridColor(int row, int col)
     {
-        int childCount = (col * RowLength + row);
+        int childCount = (col * Width + row);
         return container.GetChild(childCount).GetComponent<MeshRenderer>().material.color;
     }
 
     public void DebugGrid()
     {
         string s = string.Empty;
-        for (int dim2 = 0; dim2 < ColLength; dim2++)
+        for (int col = 0; col < Height; col++)
         {
             s += "\n";
-            for (int dim1 = 0; dim1 < RowLength; dim1++)
+            for (int row = 0; row < Width; row++)
             {
-                s += grid[dim1, dim2] ? full : empty;
+                s += grid[row, col] ? full : empty;
             }
         }
 

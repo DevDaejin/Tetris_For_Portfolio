@@ -41,6 +41,7 @@ public class GameManager : MonoBehaviour
         sound = GetComponent<Sound>();
 
         grid = new Grid(Constant.GridSize, Constant.CubeScale, Constant.CubeInterval);
+        grid.OnGameOver.AddListener(() => onChangeGameState.Invoke(GameStatus.Result));
 
         tetriminoManager = gameObject.AddComponent<TetriminoManager>();
         tetriminoManager.Init(new Vector3[tetriminoArraySize] 
@@ -53,7 +54,11 @@ public class GameManager : MonoBehaviour
             new Vector2Int(Constant.SpawnRow, 0), 
             tetriminoArraySize);
         
-        tetriminoManager.OnUpdateCurretTetrimino.AddListener((t) => currentTetrimino = t);
+        tetriminoManager.OnUpdateCurretTetrimino.AddListener((t) =>
+        {
+            currentTetrimino = null;
+            currentTetrimino = t;
+        });
 
         isStop = true;
 
@@ -132,8 +137,6 @@ public class GameManager : MonoBehaviour
                     sound.PlayBGM(BGM.Game);
 
                     ActiveSceneObjectByStatus(activeGame: true);
-
-                    UpdateGhostStatus();
                 }
                 break;
             case GameStatus.Result:
@@ -182,14 +185,20 @@ public class GameManager : MonoBehaviour
                 accelation = normalAccelation;
 
             if (time < (updateInterval - (level * 0.1f)))
-            {
                 time += Time.deltaTime * accelation;
-            }
             else
             {
                 MoveTetrimino(Vector2Int.down);
                 time = 0;
             }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                time = updateInterval;
+                HardDrop();
+            }
+
+            UpdateGhostPosition();
         }
     }
 
@@ -198,7 +207,6 @@ public class GameManager : MonoBehaviour
         if (grid.IsMovingValidation(currentTetrimino, dir))
         {
             currentTetrimino.SetPosition(dir);
-            UpdateGhostStatus();
         }
         else
         {
@@ -214,23 +222,24 @@ public class GameManager : MonoBehaviour
     {
         if (grid.IsRotateValidation(currentTetrimino.NextRotateArray(), currentTetrimino.PositionInGrid))
         {
+            currentTetrimino.Rotate();
+
             var kicked = grid.WallKick(currentTetrimino);
             currentTetrimino.SetPosition(kicked);
 
-            currentTetrimino.Rotate();
-            UpdateGhostStatus(true);
+            UpdateGhostPosition(true);
 
             if (!grid.IsRotateValidation(currentTetrimino.CurrentArray, currentTetrimino.PositionInGrid))
             {
                 currentTetrimino.Rotate(false);
-                UpdateGhostStatus(true, false);
+                UpdateGhostPosition(true, false);
 
                 currentTetrimino.SetPosition(-kicked);
             }
         }
     }
 
-    private void UpdateGhostStatus(bool isRotate = false, bool isCW = true)
+    private void UpdateGhostPosition(bool isRotate = false, bool isCW = true)
     {
         if (isRotate)
             tetriminoManager.Ghost.Rotate(isCW);
@@ -238,6 +247,13 @@ public class GameManager : MonoBehaviour
         var height = grid.CheckHighestBlock(currentTetrimino);
         tetriminoManager.UpdateGhostPosition(height);
     }
+
+    private void HardDrop()
+    {
+        var height = grid.CheckHighestBlock(currentTetrimino);
+        tetriminoManager.HardDrop(height);
+    }
+
 
     private void ActiveSceneObjectByStatus(bool activeTitle = false, bool activeGame = false, bool activeResult = false, bool activeOption = false)
     {
