@@ -10,6 +10,7 @@ public class Tetrimino : Block
     public Vector2Int PositionInGrid { set; get; }
     public Dictionary<Boundary, int> BoundaryDict { private set; get; } = new Dictionary<Boundary, int>();
     public Color BlockColor { get => blockColor; }
+    public Material Material{ set => material = value; get => material;}
     public bool[,] CurrentArray { get => allArray[rotate]; }
     private bool[][,] allArray;
 
@@ -18,16 +19,13 @@ public class Tetrimino : Block
 
     private int rotate;
     private int rotateLength;
-    private bool isGhost = false;
-
-    private readonly float ghostAlpha = .3f;
+    private readonly float alpha = .3f;
 
     public void Create(ObjectPool<Tetrimino> tetriminoPool)
     {
         gameObjectsArray = new GameObject[4, 4];
 
         this.tetriminoPool = tetriminoPool;
-        material = new Material(Shader.Find(Constant.LitShaderPath));
 
         for (int row = 0; row < 4; row++)
         {
@@ -53,12 +51,12 @@ public class Tetrimino : Block
         Initialize(TetriminoType);
     }
 
-    public void Initialize(TetriminoType type, bool isGhost = false)
+    public void Initialize(TetriminoType type)
     {
         rotate = 0;
         TetriminoType = type;
         PositionInGrid = Vector2Int.zero;
-        this.isGhost = isGhost;
+        
         Set(TetriminoType);
     }
 
@@ -93,14 +91,8 @@ public class Tetrimino : Block
 
     private void Set(Color color, bool[][,] allArray)
     {
-        Color colorOffset = Color.clear;
-        if(isGhost)
-        {
-            colorOffset.a = ghostAlpha;
-            material.set
-        }
-
-        blockColor = color - ();
+        blockColor = color;
+        blockColor.a = alpha;
         this.allArray = allArray;
         
         SetBlocks();

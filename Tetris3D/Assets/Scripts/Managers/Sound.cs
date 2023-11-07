@@ -12,9 +12,9 @@ public class Sound : MonoBehaviour
     
     private AudioSource bgmSource;
     private AudioSource sfxSource;
-    private float bgmVolume = 1;
 
-    private float sfxVolume = 1;
+    public float bgmVolume = 1;
+    public float sfxVolume = 1;
 
     private readonly string bgmName = "BGM";
     private readonly string sfxName = "SFX";
@@ -35,10 +35,15 @@ public class Sound : MonoBehaviour
         sfxSource.PlayOneShot(sfxClip[(int)sfx], sfxVolume);
     }
 
-    public void PlaySFX(SFX sfx, float volume, float pitch)
+    public void SetBGMVolume(float volume)
+    {
+        bgmVolume = volume;
+        bgmSource.volume = bgmVolume;
+    }
+    public void SetSFXVolume(float volume)
     {
         sfxVolume = volume;
-        PlaySFX(sfx, pitch);
+        sfxSource.volume = sfxVolume;
     }
 
     public void PlayBGM(BGM bgm, float pitch = 1, bool isLoop = false)

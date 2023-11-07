@@ -17,10 +17,10 @@ public class GameManager : MonoBehaviour
     private Grid grid;
     private Sound sound;
     private Result result;
+    private Option option;
 
     private TetriminoManager tetriminoManager;
     private Tetrimino currentTetrimino;
-
 
     private int level;
     private int score;
@@ -45,9 +45,7 @@ public class GameManager : MonoBehaviour
         Application.targetFrameRate = 60;
         currentStatus = GameStatus.Title;
 
-        sound = GetComponent<Sound>();
-
-        result = GetComponent<Result>();
+        result = gameObject.GetComponent<Result>();
         result.OnRegameButtonEvent.AddListener(() => onChangeGameState.Invoke(GameStatus.Play));
 
         grid = new Grid(Constant.GridSize, Constant.CubeScale, Constant.CubeInterval);
@@ -70,6 +68,16 @@ public class GameManager : MonoBehaviour
         new Vector2Int(Constant.SpawnRow, 0), tetriminoArraySize);
         
         tetriminoManager.OnUpdateCurretTetrimino.AddListener((t) => currentTetrimino = t);
+
+        sound = GetComponent<Sound>();
+
+        option = GetComponent<Option>();
+        option.OnChangedBGM.AddListener(sound.SetBGMVolume);
+        option.OnChangedSFX.AddListener(sound.SetSFXVolume);
+        option.OnChangedGhostMode.AddListener(tetriminoManager.ShowGhost);
+        option.OnCancel.AddListener(EndOption);
+        option.OnConfirm.AddListener(EndOption);
+        option.Init();
 
         onChangeGameState.AddListener(ChangeStatus);
         onChangeGameState.Invoke(GameStatus.Title);        
@@ -231,7 +239,7 @@ public class GameManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.RightArrow))
                 MoveTetrimino(Vector2Int.right);
 
-            if (Input.GetKeyUp(KeyCode.UpArrow))
+            if (Input.GetKeyDown(KeyCode.UpArrow))
                 RotateTetrimino();
 
             if (Input.GetKeyDown(KeyCode.Space))
@@ -250,7 +258,9 @@ public class GameManager : MonoBehaviour
         if (grid.IsMovingValidation(currentTetrimino, dir))
         {
             currentTetrimino.SetPosition(dir);
-            sound.PlaySFX(SFX.Move);
+
+            if(dir != Vector2Int.down)
+                sound.PlaySFX(SFX.Move);
         }
         else
         {
@@ -301,6 +311,12 @@ public class GameManager : MonoBehaviour
         tetriminoManager.HardDrop(height);
     }
 
+    private void EndOption()
+    {
+        optionGroup.SetActive(false);
+        currentStatus = GameStatus.Play;
+        isStop = false;
+    }
 
     private void ActiveSceneObjectByStatus(bool activeTitle = false, bool activeGame = false, bool activeResult = false, bool activeOption = false)
     {

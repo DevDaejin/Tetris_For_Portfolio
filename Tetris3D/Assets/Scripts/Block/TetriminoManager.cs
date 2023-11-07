@@ -15,15 +15,22 @@ public class TetriminoManager : MonoBehaviour
     private int poolSize;
     private Vector3[] tetriminoPositions;
     private Vector2Int spawnPositionInGrid;
+    private Material tetriminoMat;
+    private Material ghostMat;
+
     public Tetrimino Ghost { private set; get; }
     public UnityEvent<Tetrimino> OnUpdateCurretTetrimino = new UnityEvent<Tetrimino>();
 
     private readonly string poolName = "TetriminoPool";
     private readonly string tetriminoName = "Tetrimino";
     private readonly string ghostName = "Ghost";
+    private readonly string ghostMaterialPath = "Materials/GhostMat";
 
     public void Init(Vector3[] spawnPoints, Vector2Int spawnPositionInGrid, int initPoolSize)
     {
+        tetriminoMat = new Material(Shader.Find(Constant.LitShaderPath));
+        ghostMat = Resources.Load<Material>(ghostMaterialPath);
+
         poolSize = initPoolSize;
         poolContainer = new GameObject(poolName);
         poolContainer.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
@@ -38,7 +45,7 @@ public class TetriminoManager : MonoBehaviour
 
     public void CreateAndStart()
     {
-        Ghost = Create();
+        Ghost = Create(ghostMat);
         Ghost.gameObject.name = ghostName;
 
         for (int i = 0; i < poolSize; i++)
@@ -52,12 +59,19 @@ public class TetriminoManager : MonoBehaviour
     }
 
     public void ShowBlocks(bool isShow) => poolContainer.SetActive(isShow);
+    public void ShowGhost(bool isShow) => Ghost.gameObject.SetActive(isShow);
 
     private Tetrimino Create()
+    {               
+        return Create(tetriminoMat);
+    }
+
+    private Tetrimino Create(Material mat)
     {
         var tetrimino = new GameObject(tetriminoName.ToString()).AddComponent<Tetrimino>();
         tetrimino.transform.SetParent(poolContainer.transform);
         tetrimino.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+        tetrimino.Material = new Material(mat);
         tetrimino.Create(tetriminoPool);
 
         return tetrimino;
@@ -113,7 +127,7 @@ public class TetriminoManager : MonoBehaviour
         if (tetrimino == null)
             return;
 
-        Ghost.Initialize(tetrimino.TetriminoType, true);
+        Ghost.Initialize(tetrimino.TetriminoType);
     }
 
     public void UpdateGhostPosition(int height)
