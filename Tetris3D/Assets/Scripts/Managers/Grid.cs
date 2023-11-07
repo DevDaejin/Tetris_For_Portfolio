@@ -10,8 +10,6 @@ public class Grid
 
     private List<int> toBeRemoveLineList = new List<int>();
 
-    private float containerZOffset = 0.1f;
-
     private bool[,] grid;
     private float gridScale;
     private float gridInterval;
@@ -25,6 +23,7 @@ public class Grid
     private Shader gridShader;
     private Transform container;
 
+    private readonly float containerZOffset = 0.1f;
     private readonly string containerName = "Grid";
     private readonly string empty = " ¡Û ";
     private readonly string full = " ¡Ü ";
@@ -131,7 +130,6 @@ public class Grid
                 }
             }
         }
-
         return true;
     }
 
@@ -152,9 +150,7 @@ public class Grid
     public bool IsMovingValidation(Tetrimino tetrimino, Vector2Int moveVector)
     {
         if (IsInTheGrid(tetrimino, moveVector) && !IsCollision(tetrimino, moveVector))
-        {
             return true;
-        }
 
         return false;
     }
@@ -197,7 +193,9 @@ public class Grid
 
                         if (x >= Constant.SpawnRow && x <= Constant.SpawnRow + 4 &&
                            y >= 0 && y <= 1)
+                        {
                             OnGameOver.Invoke();
+                        }
                     }
                 }
             }

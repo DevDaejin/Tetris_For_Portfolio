@@ -11,6 +11,6 @@ public class Constant
     public const float CubeInterval = 0.03f;
 
     public const int SpawnRow = 4;
-    public const int TetriminoSize = 4;
+    public const int TetriminoMaxSize = 4;
     public const string LitShaderPath = "Universal Render Pipeline/Lit";
 }

@@ -1,20 +1,20 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Title : Block
 {
-    private float charInterval = 2;
-    private float heightOffset = 1.5f;
-    private float textOffset = 1.5f;
-    private float animationSpeed = 2;
-    private string[] tetris = { "T", "E", "T", "R", "I", "S" };
+    
     private bool[][,] blockArray;
     private Color[] blockColors;
     private Transform blockContainer;
     private TMPro.TextMeshPro tmp;
-
     private Coroutine titleAnimationCoroutine;
+
+    private readonly float charInterval = 2;
+    private readonly float heightOffset = 1.5f;
+    private readonly float textOffset = 1.5f;
+    private readonly float animationSpeed = 2;
+    private readonly string[] tetris = { "T", "E", "T", "R", "I", "S" };
 
     private readonly string blockContainerName = "Blocks";
     private readonly string pressAnyKey = "Press any key";

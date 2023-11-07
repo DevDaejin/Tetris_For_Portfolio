@@ -1,8 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class TetriminoData : MonoBehaviour
+public class TetriminoData
 {
     public static bool[][,] IArray = new bool[][,]
     {

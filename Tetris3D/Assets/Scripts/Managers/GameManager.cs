@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -27,7 +25,8 @@ public class GameManager : MonoBehaviour
     private bool isStop;
 
     private float accelation;
-    private float time = 0;
+    private float downTime = 0;
+    private float repeatTime = 0;
 
     private UnityEvent<GameStatus> onChangeGameState = new UnityEvent<GameStatus>();
 
@@ -35,7 +34,8 @@ public class GameManager : MonoBehaviour
     private const float normalAccelation = 1;
     private const float fastAccelation = 30;
 
-    private readonly float updateInterval = 1f;
+    private readonly float downInterval = 1f;
+    private readonly float repeatInterval = 0.1f;
     private readonly float orthoSize = 5.8f;
     private readonly string levelTitle = "Level : ";
     private readonly string scoreTitle = "Score : ";
@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour
         });
 
         tetriminoManager = gameObject.AddComponent<TetriminoManager>();
-        tetriminoManager.Init(new Vector3[tetriminoArraySize]
+        tetriminoManager.InitManager(new Vector3[tetriminoArraySize]
         { 
             grid.GetSpawnPoint, 
             nextTetriminoGroup.GetChild(0).position, 
@@ -85,7 +85,7 @@ public class GameManager : MonoBehaviour
         isStop = true;
         level = 1;
         score = 0;
-        time = 0;
+        downTime = 0;
         accelation = normalAccelation;
     }
 
@@ -151,7 +151,7 @@ public class GameManager : MonoBehaviour
                     grid.ActiveGrid();
 
                     tetriminoManager.DeleteAllTetrimino();
-                    tetriminoManager.CreateAndStart();
+                    tetriminoManager.InitTetriminos();
                     tetriminoManager.ShowBlocks(true);
 
                     sound.PlayBGM(BGM.Game);
@@ -225,26 +225,51 @@ public class GameManager : MonoBehaviour
             if (Input.GetKeyUp(KeyCode.DownArrow))
                 accelation = normalAccelation;
 
-            if (time < (updateInterval - (level * 0.1f)))
-                time += Time.deltaTime * accelation;
+            if (downTime < (downInterval - (level * 0.1f)))
+                downTime += Time.deltaTime * accelation;
             else
             {
                 MoveTetrimino(Vector2Int.down);
-                time = 0;
+                downTime = 0;
             }
 
             if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
                 MoveTetrimino(Vector2Int.left);
+                repeatTime = 0;
+            }
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                if (repeatInterval > repeatTime)
+                    repeatTime += Time.deltaTime;
+                else
+                {
+                    MoveTetrimino(Vector2Int.left);
+                    repeatTime = 0;
+                }
+            }
 
             if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
                 MoveTetrimino(Vector2Int.right);
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                if (repeatInterval > repeatTime)
+                    repeatTime += Time.deltaTime;
+                else
+                {
+                    MoveTetrimino(Vector2Int.right);
+                    repeatTime = 0;
+                }
+            }
 
             if (Input.GetKeyDown(KeyCode.UpArrow))
                 RotateTetrimino();
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                time = updateInterval;
+                downTime = downInterval;
                 HardDrop();
                 sound.PlaySFX(SFX.HardDrop);
             }
@@ -276,16 +301,17 @@ public class GameManager : MonoBehaviour
     private void RotateTetrimino()
     {
         if (grid.IsRotateValidation(currentTetrimino.NextRotateArray(), currentTetrimino.PositionInGrid))
-        {
+        {//회전 가능 한지 체크
             currentTetrimino.Rotate();
 
+            //벽을 뚫으면 나간 만큼 반대로 밀음
             var kicked = grid.WallKick(currentTetrimino);
             currentTetrimino.SetPosition(kicked);
 
             UpdateGhostPosition(true);
 
             if (!grid.IsRotateValidation(currentTetrimino.CurrentArray, currentTetrimino.PositionInGrid))
-            {
+            {// 회전 후 밀어진 상황에서 기존 블럭과 충돌 시 원복
                 currentTetrimino.Rotate(false);
                 UpdateGhostPosition(true, false);
 

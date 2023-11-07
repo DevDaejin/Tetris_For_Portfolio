@@ -12,7 +12,7 @@ public class Option : MonoBehaviour
     [SerializeField] private Button confirm;
     [SerializeField] private Button cancel;
 
-    private float bgmVolume = 0.3f;
+    private float bgmVolume = 0.2f;
     private float sfxVolume = 1f;
     private bool isGhostMode = true;
 
@@ -37,8 +37,9 @@ public class Option : MonoBehaviour
 
     public void Init()
     {
-        Cancel();
-        Confirm();
+        OnChangedBGM.Invoke(bgmVolume);
+        OnChangedSFX.Invoke(sfxVolume);
+        OnChangedGhostMode.Invoke(isGhostMode);
     }
 
     private void Confirm()

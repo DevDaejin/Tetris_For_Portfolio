@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -7,35 +6,49 @@ using UnityEngine.Pool;
 public class Tetrimino : Block
 {
     public TetriminoType TetriminoType { private set; get; }
+    public Material Material { get => material; set => material = value; }
+
+    /// <summary>
+    /// Grid상의 좌표, *기본적으로 Y가 "음수"로 저장됨으로 주의 필요
+    /// </summary>
     public Vector2Int PositionInGrid { set; get; }
-    public Dictionary<Boundary, int> BoundaryDict { private set; get; } = new Dictionary<Boundary, int>();
-    public Color BlockColor { get => blockColor; }
-    public Material Material{ set => material = value; get => material;}
+    
+    /// <summary>
+    /// Tetrimino 회전으로 배열 내에서 변경 되는 비어있는 좌,우,상,하 여백을 저장
+    /// </summary>
+    public Dictionary<Boundary, int> BoundaryDict { private set; get; } = new Dictionary<Boundary, int>(); 
+
     public bool[,] CurrentArray { get => allArray[rotate]; }
     private bool[][,] allArray;
-
     private GameObject[,] gameObjectsArray;
+
+    public Color BlockColor { get => blockColor; }
     private ObjectPool<Tetrimino> tetriminoPool;
 
     private int rotate;
     private int rotateLength;
+   
+    /// <summary>
+    /// Ghost Tetrimino의 Aplha값
+    /// </summary>
     private readonly float alpha = .3f;
 
     public void Create(ObjectPool<Tetrimino> tetriminoPool)
     {
-        gameObjectsArray = new GameObject[4, 4];
-
+        int maxSizeOfArray = Constant.TetriminoMaxSize;
+        gameObjectsArray = new GameObject[maxSizeOfArray, maxSizeOfArray];
         this.tetriminoPool = tetriminoPool;
 
-        for (int row = 0; row < 4; row++)
+        for (int row = 0; row < gameObjectsArray.GetLength(0); row++)
         {
-            for (int col = 0; col < 4; col++)
+            for (int col = 0; col < gameObjectsArray.GetLength(1); col++)
             {
                 Vector3 pos = new Vector3(
                         (col * (Constant.CubeScale + Constant.CubeInterval)),
                         (-row * (Constant.CubeScale + Constant.CubeInterval)), 0);
 
                 var o = Utils.CreateCubeBlock(pos, Constant.CubeScale, $"{row + 1} / {col + 1}", transform);
+                o.GetComponent<MeshRenderer>().material = Material;
                 o.SetActive(false);
 
                 gameObjectsArray[row, col] = o;
@@ -101,24 +114,22 @@ public class Tetrimino : Block
     private void SetBlocks()
     {
         rotateLength = allArray.GetLength(0);
+
         OffAllBlock();
 
         for (int row = 0; row < CurrentArray.GetLength(0); row++)
         {
             for (int col = 0; col < CurrentArray.GetLength(1); col++)
             {
-
                 if (CurrentArray[row, col])
                 {
-                    material.color = blockColor;
-                    gameObjectsArray[row, col].GetComponent<MeshRenderer>().material = material;
+                    Material.color = blockColor;
                     gameObjectsArray[row, col].SetActive(true);
                 }
-                else
-                    gameObjectsArray[row, col].SetActive(false);
             }
         }
 
+        //Boundary 재설정
         GetMin();
         GetMax();
     }
@@ -126,7 +137,7 @@ public class Tetrimino : Block
     public void SetPosition(Vector2Int moveVector)
     {
         PositionInGrid += moveVector;
-        transform.position += Utils.MoveScale(new Vector3(moveVector.x, moveVector.y, 0));
+        transform.position += Utils.MoveScale(Utils.Vector2IntTo3(moveVector));
     }
 
     public void InitPosition(Vector3 currentPosition, Vector2Int moveVector)
@@ -135,7 +146,10 @@ public class Tetrimino : Block
         PositionInGrid = moveVector;
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="isCW">CW = Clockwise, 시계방향</param>
     public void Rotate(bool isCW = true)
     {
         if (isCW)
@@ -172,8 +186,10 @@ public class Tetrimino : Block
             }
         }
     }
-
-
+    /// <summary>
+    /// Tetrimino마다 배열 Size가 달라 중점이 달라지는데 그것을 고려하여 중점에 대한 조정값 반환.
+    /// </summary>
+    /// <returns></returns>
     public Vector3 OffsetToCenter()
     {
         float scaleValue = Constant.CubeScale + Constant.CubeInterval;
