@@ -20,7 +20,6 @@ public class Title : Block
     private readonly string pressAnyKey = "Press any key";
     private readonly string textShaderPath = "TextMeshPro/Mobile/Distance Field";
 
-    #region Unity leftcycle
     private void Awake()
     {
         blockColors = new Color[] { Color.red, Color.green, Color.blue, Color.yellow, Color.cyan, Constant.Orange, Constant.Purple };
@@ -39,7 +38,6 @@ public class Title : Block
         StopCoroutine(titleAnimationCoroutine);
         titleAnimationCoroutine = null;
     }
-    #endregion
 
     IEnumerator TitleAnimationCoroutine()
     {
@@ -110,60 +108,14 @@ public class Title : Block
 
     private void SetData()
     {
-        blockArray = new bool[6][,];
-        //T
-        blockArray[0] = new bool[,]
+        blockArray = new bool[6][,]
         {
-            {true,  true,   true},
-            {false, true,   false},
-            {false, true,   false},
-            {false, true,   false},
-            {false, true,   false}
+            Constant.TArray,
+            Constant.EArray,
+            Constant.TArray,
+            Constant.RArray,
+            Constant.IArray,
+            Constant.SArray
         };
-        //E
-        blockArray[1] = new bool[,]
-        {
-            {true,  true,   true},
-            {true,  false,  false},
-            {true,  true,   true},
-            {true,  false,  false},
-            {true,  true,   true},
-        };
-        //T
-        blockArray[2] = new bool[,]
-         {
-            {true,  true,   true},
-            {false, true,   false},
-            {false, true,   false},
-            {false, true,   false},
-            {false, true,   false}
-         };
-        //R
-        blockArray[3] = new bool[,]
-         {
-            {true,  true,   true},
-            {true,  false,  true},
-            {true,  true,   false},
-            {true,  false,  true},
-            {true,  false,  true}
-         };
-        //I
-        blockArray[4] = new bool[,]
-         {
-            {true,  true,   true},
-            {false, true,   false},
-            {false, true,   false},
-            {false, true,   false},
-            {true,  true,   true}
-         };
-        //S
-        blockArray[5] = new bool[,]
-         {
-            {true,  true,   true},
-            {true,  false,  false},
-            {true,  true,   true},
-            {false, false,  true},
-            {true,  true,   true}
-         };
     }
 }

@@ -182,7 +182,8 @@ public class Tetrimino : Block
         {
             for (int col = 0; col < gameObjectsArray.GetLength(1); col++)
             {
-                gameObjectsArray[row, col].SetActive(false);
+                if(gameObjectsArray[row, col].activeInHierarchy)
+                   gameObjectsArray[row, col].SetActive(false);
             }
         }
     }

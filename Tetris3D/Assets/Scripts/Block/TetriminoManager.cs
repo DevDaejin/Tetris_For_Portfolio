@@ -108,12 +108,11 @@ public class TetriminoManager : MonoBehaviour
         if (isGet)
             tetriminoPool.Get();
 
-        Tetrimino t;
+        var tArray = queueTetrimino.ToArray();
         for (int i = 0; i < queueTetrimino.Count; i++)
         {
-            t = queueTetrimino.ToArray()[i].GetComponent<Tetrimino>();
-            t.transform.position = tetriminoPositions[i] - t.OffsetToCenter();
-            t.gameObject.SetActive(true);
+            tArray[i].transform.position = tetriminoPositions[i] - tArray[i].OffsetToCenter();
+            tArray[i].gameObject.SetActive(true);
         }
 
         if (currentTetrimino == null)
@@ -143,6 +142,11 @@ public class TetriminoManager : MonoBehaviour
     public void HardDrop(int height)
     {
         currentTetrimino.SetPosition(Vector2Int.up * height);
+    }
+
+    public void Hold()
+    {
+
     }
 
     public void DeleteAllTetrimino()

@@ -3357,6 +3357,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 3f3af2813f7410c42b283be1cf12c46f, type: 3}
   - {fileID: 8300000, guid: 86d5ebfac87984c4f8b7e160095fb1f1, type: 3}
   - {fileID: 8300000, guid: facf6dee5c33bab47a6111ce4082e3fe, type: 3}
+  bgmVolume: 1
+  sfxVolume: 1
 --- !u!114 &633929996
 MonoBehaviour:
   m_ObjectHideFlags: 0
