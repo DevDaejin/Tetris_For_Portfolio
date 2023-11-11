@@ -15,22 +15,29 @@ public class TetriminoManager : MonoBehaviour
     //Tetrimino 생성 지점, 대기열 1~3에 대한 좌표값 배열
     private Vector3[] tetriminoPositions;
     private Vector2Int spawnPositionInGrid;
+    private Vector3 holdPosition;
 
     //Material을 동적 생성하려 했으나..
     //기본 Lit shader에서는 Surface type을 동적 변환이 불가함
     private Material tetriminoMat;
     private Material ghostMat;
-    
+
     public Tetrimino Ghost { private set; get; }
+    public Tetrimino Hold { private set; get; }
+
+    private bool isHoldEmpty;
+
     private Tetrimino currentTetrimino;
     public UnityEvent<Tetrimino> OnUpdateCurretTetrimino = new UnityEvent<Tetrimino>();
 
+
     private readonly string poolName = "TetriminoPool";
     private readonly string tetriminoName = "Tetrimino";
+    private readonly string holdName = "Hold";
     private readonly string ghostName = "Ghost";
     private readonly string ghostMaterialPath = "Materials/GhostMat";
 
-    public void InitManager(Vector3[] spawnPoints, Vector2Int spawnPositionInGrid, int initPoolSize)
+    public void InitManager(Vector3[] spawnPoints, Vector3 holdPosition,Vector2Int spawnPositionInGrid, int initPoolSize)
     {
         tetriminoMat = new Material(Shader.Find(Constant.LitShaderPath));
         ghostMat = Resources.Load<Material>(ghostMaterialPath);
@@ -42,6 +49,9 @@ public class TetriminoManager : MonoBehaviour
         
         tetriminoPositions = spawnPoints;
         this.spawnPositionInGrid = spawnPositionInGrid;
+        this.holdPosition = holdPosition;
+
+        isHoldEmpty = true;
 
         OnUpdateCurretTetrimino.AddListener(InitializeGhost);
         ShowBlocks(false);
@@ -49,6 +59,10 @@ public class TetriminoManager : MonoBehaviour
 
     public void InitTetriminos()
     {
+        Hold = Create();
+        Hold.gameObject.name = holdName;
+        Hold.transform.position = holdPosition;
+
         Ghost = Create(ghostMat);
         Ghost.gameObject.name = ghostName;
 
@@ -139,14 +153,31 @@ public class TetriminoManager : MonoBehaviour
         Ghost.SetPosition(Vector2Int.up * height);
     }
 
+    public bool HoldCurrentTetrimino()
+    {
+        var currentType = currentTetrimino.TetriminoType;
+        var currentPosition = currentTetrimino.PositionInGrid;
+        if (isHoldEmpty)
+        {
+            currentTetrimino.Release();
+            isHoldEmpty = false;
+        }
+        else
+        {
+            var holdType = Hold.TetriminoType;
+            currentTetrimino.Initialize(holdType);
+            currentTetrimino.PositionInGrid = currentPosition;
+            Ghost.Initialize(holdType);
+        }
+        Hold.Initialize(currentType);
+        Hold.transform.position = holdPosition - Hold.OffsetToCenter();
+
+        return true;
+    }
+
     public void HardDrop(int height)
     {
         currentTetrimino.SetPosition(Vector2Int.up * height);
-    }
-
-    public void Hold()
-    {
-
     }
 
     public void DeleteAllTetrimino()

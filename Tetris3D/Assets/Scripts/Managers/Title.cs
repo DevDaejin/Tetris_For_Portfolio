@@ -17,7 +17,7 @@ public class Title : Block
     private readonly string[] tetris = { "T", "E", "T", "R", "I", "S" };
 
     private readonly string blockContainerName = "Blocks";
-    private readonly string pressAnyKey = "Press any key";
+    private readonly string pressAnyKey = "Press the \"space bar\" to get started";
     private readonly string textShaderPath = "TextMeshPro/Mobile/Distance Field";
 
     private void Awake()

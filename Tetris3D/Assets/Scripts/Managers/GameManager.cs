@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject optionGroup;
     [SerializeField] private GameObject resultGroup;
     [SerializeField] private Transform nextTetriminoGroup;
+    [SerializeField] private Transform holdTransform;
     [SerializeField] private TMP_Text infoText;
 
     private GameStatus currentStatus;
@@ -23,7 +24,7 @@ public class GameManager : MonoBehaviour
     private int level;
     private int score;
     private bool isStop;
-
+    private bool isHolding;
     private float accelation;
     private float downTime = 0;
     private float repeatTime = 0;
@@ -64,7 +65,8 @@ public class GameManager : MonoBehaviour
             nextTetriminoGroup.GetChild(0).position, 
             nextTetriminoGroup.GetChild(1).position, 
             nextTetriminoGroup.GetChild(2).position
-        }, 
+        },
+        holdTransform.position, 
         new Vector2Int(Constant.SpawnRow, 0), tetriminoArraySize);
         
         tetriminoManager.OnUpdateCurretTetrimino.AddListener((t) => currentTetrimino = t);
@@ -80,8 +82,9 @@ public class GameManager : MonoBehaviour
         option.Init();
 
         onChangeGameState.AddListener(ChangeStatus);
-        onChangeGameState.Invoke(GameStatus.Title);        
+        onChangeGameState.Invoke(GameStatus.Title);
 
+        isHolding = false;
         isStop = true;
         level = 1;
         score = 0;
@@ -101,7 +104,7 @@ public class GameManager : MonoBehaviour
     {
         if (currentStatus == GameStatus.Title)
         {
-            if (Input.anyKeyDown)
+            if (Input.GetKeyDown(KeyCode.Space))
                 onChangeGameState.Invoke(GameStatus.Lobby);
         }
 
@@ -219,62 +222,69 @@ public class GameManager : MonoBehaviour
     {
         if (!isStop && currentTetrimino != null)
         {
-            if (Input.GetKeyDown(KeyCode.DownArrow))
-                accelation = fastAccelation;
+            Falling();
+            Moving();
 
-            if (Input.GetKeyUp(KeyCode.DownArrow))
-                accelation = normalAccelation;
-
-            if (downTime < (downInterval - (level * 0.1f)))
-                downTime += Time.deltaTime * accelation;
-            else
-            {
-                MoveTetrimino(Vector2Int.down);
-                downTime = 0;
-            }
-
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                MoveTetrimino(Vector2Int.left);
-                repeatTime = 0;
-            }
-            if (Input.GetKey(KeyCode.LeftArrow))
-            {
-                if (repeatInterval > repeatTime)
-                    repeatTime += Time.deltaTime;
-                else
-                {
-                    MoveTetrimino(Vector2Int.left);
-                    repeatTime = 0;
-                }
-            }
-
-            if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                MoveTetrimino(Vector2Int.right);
-            }
-            if (Input.GetKey(KeyCode.RightArrow))
-            {
-                if (repeatInterval > repeatTime)
-                    repeatTime += Time.deltaTime;
-                else
-                {
-                    MoveTetrimino(Vector2Int.right);
-                    repeatTime = 0;
-                }
-            }
-
+            //Holding
+            if (Input.GetKeyDown(KeyCode.LeftShift) && !isHolding)
+                isHolding = tetriminoManager.HoldCurrentTetrimino();
+            
+            //Rotating
             if (Input.GetKeyDown(KeyCode.UpArrow))
                 RotateTetrimino();
 
+            //Hard drop
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 downTime = downInterval;
                 HardDrop();
                 sound.PlaySFX(SFX.HardDrop);
+                isHolding = true;
             }
 
             UpdateGhostPosition();
+        }
+    }
+
+    private void Falling()
+    {
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+            accelation = fastAccelation;
+
+        if (Input.GetKeyUp(KeyCode.DownArrow))
+            accelation = normalAccelation;
+
+        if (downTime < (downInterval - (level * 0.1f)))
+            downTime += Time.deltaTime * accelation;
+        else
+        {
+            MoveTetrimino(Vector2Int.down);
+            downTime = 0;
+        }
+    }
+
+    private void Moving()
+    {
+        Moving(KeyCode.LeftArrow, Vector2Int.left);
+        Moving(KeyCode.RightArrow, Vector2Int.right);
+    }
+
+    private void Moving(KeyCode code, Vector2Int direction)
+    {
+        if (Input.GetKeyDown(code))
+        {
+            MoveTetrimino(direction);
+            repeatTime = 0;
+        }
+        if (Input.GetKey(code))
+        {
+            if (repeatInterval > repeatTime)
+                repeatTime += Time.deltaTime;
+            else
+            {
+                MoveTetrimino(direction);
+                repeatTime = 0;
+            }
         }
     }
 
@@ -293,6 +303,7 @@ public class GameManager : MonoBehaviour
             {
                 grid.AddTetriminoInfo(currentTetrimino);
                 sound.PlaySFX(SFX.SoftDrop);
+                isHolding = false;
                 currentTetrimino.Release();
             }
         }

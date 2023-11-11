@@ -266,17 +266,25 @@ public class Grid
         for (int i = 0; i < count; i++)
         {
             int line = toBeRemoveLineList[0];
-            for (int col = Height - 1; col > 0; col--)
+            for (int col = Height - 1; col >= 0; col--)
             {
                 for (int row = 0; row < Width; row++)
                 {
-                    if (line >= col)
+                    if (col != 0)
                     {
-                        grid[row, col] = grid[row, col - 1];
-                        grid[row, col - 1] = false;
+                        if (line >= col)
+                        {
+                            grid[row, col] = grid[row, col - 1];
+                            grid[row, col - 1] = false;
 
-                        Color color = GetGridColor(row, col - 1);
-                        SetGridColor(row, col, color);
+                            Color color = GetGridColor(row, col - 1);
+                            SetGridColor(row, col, color);
+                        }
+                    }
+                    else
+                    {
+                        grid[row, col] = false;
+                        SetGridColor(row, col, Color.gray);
                     }
                 }
             }
